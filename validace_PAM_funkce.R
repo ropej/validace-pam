@@ -639,7 +639,14 @@ write_pam_validation_xlsx <- function(report, path_out) {
   # Název výkazu
   r <- wr_header("Název výkazu", r)
   writeData(wb, "Report overview", tibble(x = vykaz), startRow = r, colNames = FALSE)
-  r <- r + 2L
+  r <- r + 1L
+  if (!is.null(report$max_rok_filter)) {
+    writeData(wb, "Report overview",
+              tibble(x = paste0("Filtrováno na roky ≤ ", report$max_rok_filter)),
+              startRow = r, colNames = FALSE)
+    r <- r + 1L
+  }
+  r <- r + 1L
 
   # Typy proměnných
   r <- wr_header("Typy proměnných", r)
@@ -670,8 +677,20 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- wr_header("Příklady duplicit", r)
   if (!is.null(dupl_ex) && nrow(dupl_ex) > 0) {
     writeData(wb, "Report overview", dupl_ex, startRow = r, colNames = TRUE)
+    r <- r + nrow(dupl_ex) + 2L
   } else {
     writeData(wb, "Report overview", tibble(x = "žádné duplicity"),
+              startRow = r, colNames = FALSE)
+    r <- r + 2L
+  }
+
+  # Zařízení s nejvíce outlierů
+  tof <- report$top_outlier_facilities
+  r <- wr_header("Zařízení s nejvíce outlierů", r)
+  if (!is.null(tof) && nrow(tof) > 0) {
+    writeData(wb, "Report overview", tof, startRow = r, colNames = FALSE)
+  } else {
+    writeData(wb, "Report overview", tibble(x = "žádná zařízení s outlierů"),
               startRow = r, colNames = FALSE)
   }
 
@@ -739,6 +758,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   header_style <- createStyle(textDecoration = "bold", wrapText = TRUE,
                               halign = "left", valign = "center")
+  right_style  <- createStyle(halign = "right")
   pct_style    <- createStyle(numFmt = "0.00%")
   num_style    <- createStyle(numFmt = "# ##0")
   dec2_style   <- createStyle(numFmt = "# ##0.00")
@@ -758,6 +778,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
     if (sheet != "Report overview") addFilter(wb, sheet, rows = 1, cols = 1:n_cols)
     addStyle(wb, sheet, header_style, rows = 1, cols = 1:n_cols, gridExpand = TRUE)
+    if (sheet == "Report overview")
+      addStyle(wb, sheet, right_style, rows = 1:200, cols = 2, gridExpand = TRUE)
     setColWidths(wb, sheet, cols = 1:n_cols, widths = col_widths)
 
     if (sheet == "Strange behaviour" && n_rows > 1) {
@@ -779,6 +801,22 @@ write_pam_validation_xlsx <- function(report, path_out) {
       }
       if (length(hide_idx) > 0)
         setColWidths(wb, sheet, cols = hide_idx, widths = col_widths[hide_idx], hidden = TRUE)
+    }
+
+    if (sheet == "Example of strange behaviour" && n_rows > 1) {
+      wrap_top_style <- createStyle(wrapText = TRUE, valign = "top")
+      addStyle(wb, sheet, wrap_top_style, rows = 2:n_rows, cols = 1:n_cols, gridExpand = TRUE)
+      idx_first <- which(names(dat) == "polozka_index")
+      if (length(idx_first) == 0) idx_first <- 1L
+      other_cols <- setdiff(seq_len(n_cols), idx_first)
+      setColWidths(wb, sheet, cols = idx_first,  widths = 14.67)
+      if (length(other_cols) > 0)
+        setColWidths(wb, sheet, cols = other_cols, widths = 41)
+      empty_cols <- which(sapply(seq_len(n_cols), function(i) all(is.na(dat[[i]]))))
+      if (length(empty_cols) > 0) {
+        empty_widths <- ifelse(empty_cols == idx_first, 14.67, 41)
+        setColWidths(wb, sheet, cols = empty_cols, widths = empty_widths, hidden = TRUE)
+      }
     }
 
     if (sheet == "Summary" && n_rows > 1) {
@@ -850,6 +888,7 @@ validace_pam_1_04 <- function(
   if (length(r_cols) == 0)
     stop("V datech nebyla nalezena žádná r-ková proměnná odpovídající vzoru: ", r_pattern)
 
+  effective_max_rok <- NULL
   if (!is.null(max_rok)) {
     rok_int <- as.integer(data$rok)
     effective_max_rok <- if (all(rok_int < 100, na.rm = TRUE) && max_rok >= 100) {
@@ -913,13 +952,34 @@ validace_pam_1_04 <- function(
   )
   log("  Příklady sestaveny: ", nrow(examples), " záznamů.")
 
+  top_outlier_facilities <- if ("red_izo" %in% names(data) &&
+                                "outlier_limit" %in% names(summary_table)) {
+    r_cols_all <- names(data)[str_detect(names(data), r_pattern)]
+    data |>
+      select(red_izo, all_of(r_cols_all)) |>
+      pivot_longer(cols = all_of(r_cols_all),
+                   names_to = "polozka_index", values_to = "v") |>
+      mutate(v_num = suppressWarnings(as.numeric(v))) |>
+      left_join(summary_table |> select(polozka_index, outlier_limit),
+                by = "polozka_index") |>
+      filter(!is.na(outlier_limit), !is.na(v_num), v_num > outlier_limit) |>
+      count(red_izo, name = "n_outl") |>
+      arrange(desc(n_outl)) |>
+      filter(n_outl >= 5) |>
+      slice_head(n = 20)
+  } else {
+    tibble(red_izo = character(), n_outl = integer())
+  }
+
   report <- list(
-    overview          = overview,
-    freq_table        = freq_table,
-    coverage          = coverage,
-    summary           = summary_table,
-    strange_behaviour = strange_behaviour,
-    examples          = examples
+    overview               = overview,
+    freq_table             = freq_table,
+    coverage               = coverage,
+    summary                = summary_table,
+    strange_behaviour      = strange_behaviour,
+    examples               = examples,
+    top_outlier_facilities = top_outlier_facilities,
+    max_rok_filter         = effective_max_rok
   )
 
   if (!is.null(path_out)) {
