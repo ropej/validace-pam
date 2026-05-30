@@ -14,7 +14,7 @@
 #   9. make_pam_strange_behaviour()– příznaky podezřelého chování
 #  10. make_pam_examples()         – konkrétní příklady problémů
 #  11. write_pam_validation_xlsx() – zápis reportu do .xlsx
-#  12. validace_pam_1_04()         – hlavní orchestrační funkce
+#  12. validace_pam()         – hlavní orchestrační funkce
 # ==============================================================================
 
 
@@ -59,14 +59,29 @@ modus_or_median <- function(x, na.rm = TRUE) {
 
 
 # ------------------------------------------------------------------------------
-# 4. prep_pam_labels()
+# 4. prep_pam_labels() + oddil_to_code()
 # Načtení a příprava labelů proměnných z Excel souboru
+# oddil_to_code(): převod oddílu P1c (římská číslice) na dvouciferný kód
 # ------------------------------------------------------------------------------
 
 clean_excel_text <- function(x) {
   x |>
     stringr::str_replace_all("[[:cntrl:]]", " ") |>
     stringr::str_squish()
+}
+
+oddil_to_code <- function(oddil) {
+  roman_vals <- c(I=1L, II=2L, III=3L, IV=4L, V=5L, VI=6L,
+                  VII=7L, VIII=8L, IX=9L, X=10L)
+  suffix     <- str_extract(oddil, "[a-z]+$")
+  has_suffix <- !is.na(suffix)
+  suffix[!has_suffix] <- ""
+  base <- str_remove(oddil, "[a-z]+$")
+  num  <- roman_vals[base]
+  ifelse(is.na(num), NA_character_,
+         ifelse(has_suffix,
+                paste0(num, suffix),
+                str_pad(num, 2L, pad = "0")))
 }
 
 prep_pam_labels <- function(path_labels, r_pattern = "^r\\d{1}") {
@@ -76,7 +91,7 @@ prep_pam_labels <- function(path_labels, r_pattern = "^r\\d{1}") {
     rename(label_result = "zkr") |>
     mutate(label_result = clean_excel_text(label_result)) |>
     filter(!if_all(everything(), is.na)) |>
-    distinct(polozka_index, .keep_all = TRUE) |>
+    distinct(polozka, .keep_all = TRUE) |>
     select(polozka, polozka_index, vykaz, label_result)
 }
 
@@ -158,6 +173,15 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
     group_by(polozka_index, rok) |>
     summarise(n_mesicu = n_distinct(mes), .groups = "drop")
 
+  mes_modus <- long |>
+    filter(!is.na(hodnota_num)) |>
+    group_by(polozka_index) |>
+    summarise(
+      mes_modus = str_pad(as.character(round(modus_or_median(as.numeric(mes)))),
+                          2, pad = "0"),
+      .groups = "drop"
+    )
+
   freq_summary <- mesice_per_rok |>
     group_by(polozka_index) |>
     summarise(
@@ -171,6 +195,7 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
     )
 
   freq_summary |>
+    left_join(mes_modus, by = "polozka_index") |>
     mutate(
       frekvence_mereni = case_when(
         modus_mesicu == 12          ~ "měsíční",
@@ -179,13 +204,15 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
         modus_mesicu == 1           ~ "roční",
         TRUE                        ~ "nepravidelná"
       ),
-      ocekavane_mesice = case_when(
-        frekvence_mereni == "měsíční" ~ list(str_pad(1:12, width = 2, pad = "0")),
-        frekvence_mereni == "čtvrtletní" ~ list(c("03", "06", "09", "12")),
-        frekvence_mereni == "pololetní" ~ list(c("06", "12")),
-        frekvence_mereni == "roční"      ~ list("12"),
-        TRUE                             ~ list(integer(0))
-      )
+      ocekavane_mesice = pmap(list(frekvence_mereni, mes_modus), function(freq, mm) {
+        switch(freq,
+          "měsíční"    = str_pad(as.character(1:12), width = 2, pad = "0"),
+          "čtvrtletní" = c("03", "06", "09", "12"),
+          "pololetní"  = c("06", "12"),
+          "roční"      = if (is.na(mm)) "12" else mm,
+          integer(0)
+        )
+      })
     ) |>
     select(polozka_index, frekvence_mereni, modus_mesicu_za_rok,
            roky_s_merenims, ocekavane_mesice)
@@ -277,7 +304,9 @@ summarise_pam_variables <- function(data, id_cols,
                                     freq_table         = NULL,
                                     coverage_table     = NULL,
                                     r_pattern          = "^r\\d{1}",
-                                    outlier_multiplier = 3) {
+                                    outlier_multiplier = 3,
+                                    vykaz              = NULL,
+                                    oddil              = NULL) {
 
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
 
@@ -333,8 +362,8 @@ summarise_pam_variables <- function(data, id_cols,
   }
 
   # --- diff-based statistiky (jen pro sub-roční frekvence) ---
-  diff_group_cols <- intersect(c("rok", "hosp_druh", "plat_rad", "druh_pam"), names(data))
-  sort_by_mes     <- "mes" %in% names(data)
+  diff_static_cols <- intersect(c("hosp_druh", "plat_rad", "druh_pam"), names(data))
+  sort_by_mes      <- "mes" %in% names(data)
 
   vars_for_diff <- if ("frekvence_mereni" %in% names(summary_table))
     summary_table |>
@@ -344,14 +373,15 @@ summarise_pam_variables <- function(data, id_cols,
   else
     character(0)
 
-  # Předpočítaný zdiferencovaný dataset — použit pro diff stats i var_range_diffmeans
+  # Skupiny jsou bez roku → přelom roku (prosinec→leden) je platná diference,
+  # NA dostane jen první hodnota celé časové řady dané skupiny.
   diff_data <- if (length(vars_for_diff) > 0) {
-    sel_all <- c(diff_group_cols, if (sort_by_mes) "mes", vars_for_diff)
-    raw     <- data |> select(all_of(sel_all))
-    if (sort_by_mes)
-      raw <- raw |> arrange(across(all_of(diff_group_cols)), mes)
-    raw |>
-      group_by(across(all_of(diff_group_cols))) |>
+    sel_all   <- unique(c("rok", diff_static_cols, if (sort_by_mes) "mes", vars_for_diff))
+    sort_cols <- c(diff_static_cols, "rok", if (sort_by_mes) "mes")
+    data |>
+      select(all_of(sel_all)) |>
+      arrange(across(all_of(sort_cols))) |>
+      group_by(across(all_of(diff_static_cols))) |>
       mutate(across(all_of(vars_for_diff), ~ {
         v <- suppressWarnings(as.numeric(.))
         c(NA, diff(v))
@@ -389,20 +419,63 @@ summarise_pam_variables <- function(data, id_cols,
                 by = "polozka_index")
   }
 
-  if (!is.null(labels_clean)) {
-    if (r_pattern == "^r\\d{3}$") {
-      idx_t <- str_replace(summary_table$polozka_index,
-                           "^r(\\d)(\\d{2})$", "r0\\10\\2")
+  # --- Statistiky pro roční proměnné (z raw hodnot, bez transformace na diference) ---
+  vars_annual <- if ("frekvence_mereni" %in% names(summary_table))
+    summary_table |> filter(frekvence_mereni == "roční") |> pull(polozka_index)
+  else character(0)
+
+  if (length(vars_annual) > 0) {
+    annual_raw_stats <- map_dfr(vars_annual, \(var) {
+      x_num  <- suppressWarnings(as.numeric(data[[var]]))
+      x_noNA <- x_num[!is.na(x_num)]
+      out_lim <- upper_outlier_limit(x_num, multiplier = outlier_multiplier)
+      mask    <- !is.na(x_num)
+      tibble(
+        polozka_index       = var,
+        count_uniques_diff  = n_distinct(x_num, na.rm = TRUE),
+        min_diff            = if (length(x_noNA) > 0) min(x_noNA) else NA_real_,
+        max_diff            = if (length(x_noNA) > 0) max(x_noNA) else NA_real_,
+        outliers_ratio_diff = if (is.na(out_lim)) NA_real_
+                              else mean(x_num[mask] > out_lim, na.rm = TRUE)
+      )
+    })
+
+    dmr_ann <- var_range_diffmeans(
+      data |> select(rok, all_of(vars_annual)) |> mutate(across(-rok, as.numeric))
+    )
+    annual_raw_stats <- annual_raw_stats |>
+      left_join(tibble(polozka_index = names(dmr_ann),
+                       diffmean_range = as.numeric(dmr_ann)),
+                by = "polozka_index")
+
+    if ("count_uniques_diff" %in% names(summary_table)) {
       summary_table <- summary_table |>
-        mutate(label_result = labels_clean$label_result[
-                                match(idx_t, labels_clean$polozka)]) |>
-        relocate(label_result, .after = polozka_index)
+        rows_patch(annual_raw_stats, by = "polozka_index", unmatched = "ignore")
     } else {
       summary_table <- summary_table |>
-        mutate(label_result = labels_clean$label_result[
-                                match(polozka_index, labels_clean$polozka)]) |>
-        relocate(label_result, .after = polozka_index)
+        left_join(annual_raw_stats, by = "polozka_index")
     }
+  }
+
+  if (!is.null(labels_clean)) {
+    vykaz_val <- vykaz
+    lbl <- if (!is.null(vykaz_val) && "vykaz" %in% names(labels_clean))
+      labels_clean |> filter(vykaz == vykaz_val)
+    else
+      labels_clean
+
+    label_keys <- if (!is.null(oddil)) {
+      code <- oddil_to_code(oddil)
+      paste0("r", code, "0", str_extract(summary_table$polozka_index, "\\d{2}$"))
+    } else if (r_pattern == "^r\\d{3}$") {
+      str_replace(summary_table$polozka_index, "^r(\\d)(\\d{2})$", "r0\\10\\2")
+    } else {
+      summary_table$polozka_index
+    }
+
+    summary_table <- summary_table |>
+      mutate(label_result = lbl$label_result[match(label_keys, lbl$polozka)]) |>
+      relocate(label_result, .after = polozka_index)
   }
 
   summary_table
@@ -501,13 +574,15 @@ make_pam_strange_behaviour <- function(summary_table,
 make_pam_examples <- function(data, id_cols, summary_table,
                               coverage_table        = NULL,
                               r_pattern             = "^r\\d{3}$",
-                              max_examples_per_type = 100) {
+                              max_examples_per_type = 100,
+                              facility_id           = "red_izo") {
 
   r_cols        <- names(data)[str_detect(names(data), r_pattern)]
   valid_id_cols <- id_cols[id_cols %in% names(data)]
 
+  fac_cols  <- if (facility_id %in% names(data)) facility_id else character(0)
   long_data <- data |>
-    select(all_of(valid_id_cols), all_of(r_cols)) |>
+    select(all_of(valid_id_cols), all_of(fac_cols), all_of(r_cols)) |>
     pivot_longer(cols      = all_of(r_cols),
                  names_to  = "polozka_index",
                  values_to = "value") |>
@@ -536,16 +611,16 @@ make_pam_examples <- function(data, id_cols, summary_table,
               .groups = "drop")
 
   # --- outliers_per_facility: red_izo s > 5 outl, jen nejvyšší úroveň ---
-  outl_fac_tbl <- if ("red_izo" %in% valid_id_cols) {
+  outl_fac_tbl <- if (facility_id %in% names(data)) {
     long_data |>
       filter(!is.na(outlier_limit), !is.na(value_num), value_num > outlier_limit) |>
-      count(polozka_index, red_izo, name = "n_outl") |>
+      count(polozka_index, .data[[facility_id]], name = "n_outl") |>
       filter(n_outl > 5) |>
       group_by(polozka_index) |>
-      filter(n_outl == max(n_outl)) |>
+      slice_max(n_outl, with_ties = TRUE) |>
       summarise(
-        outliers_per_facility = paste0("Po ", max(n_outl), " outl: ",
-                                       paste(sort(red_izo), collapse = ", ")),
+        outliers_per_facility = paste0("Po ", first(n_outl), " outl: ",
+                                       paste(sort(.data[[facility_id]]), collapse = ", ")),
         .groups = "drop"
       )
   } else tibble(polozka_index = character(), outliers_per_facility = character())
@@ -607,6 +682,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
   n_neg <- if (!is.null(report$summary) && "is_negative" %in% names(report$summary))
     sum(report$summary$is_negative, na.rm = TRUE) else NA_integer_
 
+  n_empty_fac <- if (!is.null(report$n_empty_facility_id)) report$n_empty_facility_id else NA_integer_
+
   n_empty_lbl <- if (!is.null(report$strange_behaviour) &&
                      "existing_label" %in% names(report$strange_behaviour))
     sum(report$strange_behaviour$existing_label %in% FALSE) else NA_integer_
@@ -660,12 +737,16 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   # Metriky (label | hodnota)
   kv <- tibble(
-    label = c("Počet let", "Počet řádků",
-              "Počet záporných proměnných", "Počet prázdných labelů",
+    label = c("Identifikátor zařízení",
+              "Počet let", "Počet řádků",
+              "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
+              "Počet prázdných labelů",
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
-    value = c(as.character(max_years), as.character(report$overview$n_rows),
-              as.character(n_neg), as.character(n_empty_lbl),
+    value = c(if (!is.null(report$facility_id)) report$facility_id else "",
+              as.character(max_years), as.character(report$overview$n_rows),
+              as.character(n_neg), as.character(n_empty_fac),
+              as.character(n_empty_lbl),
               as.character(exist_inkonz),
               as.character(report$overview$existence_of_duplicates),
               as.character(report$overview$n_duplicate_keys))
@@ -714,7 +795,11 @@ write_pam_validation_xlsx <- function(report, path_out) {
                "outliers_ratio_diff",
                "label_result", "first_year", "last_year")),
       starts_with("year")
-    )
+    ) |>
+    (\(x) if (!is.null(report$freq_table) && nrow(report$freq_table) > 0 &&
+               all(report$freq_table$frekvence_mereni == "roční", na.rm = TRUE))
+        rename_with(x, ~ str_remove(.x, "_diff$"), matches("_diff$"))
+      else x)()
 
   addWorksheet(wb, sheetName = "Summary")
   writeData(wb, "Summary", summary_out)
@@ -820,23 +905,20 @@ write_pam_validation_xlsx <- function(report, path_out) {
     }
 
     if (sheet == "Summary" && n_rows > 1) {
-      pct_cols <- which(names(dat) %in% c("na_ratio", "zeros_ratio",
-                                           "mereni_ok_ratio", "outliers_ratio_diff"))
+      pct_cols <- which(names(dat) %in% c("na_ratio", "zeros_ratio", "mereni_ok_ratio",
+                                           "outliers_ratio", "outliers_ratio_diff"))
       if (length(pct_cols) > 0)
         addStyle(wb, sheet, pct_style, rows = 2:n_rows, cols = pct_cols, gridExpand = TRUE)
 
       num_cols <- which(names(dat) %in% c("count_years", "count_mes",
-                                           "count_uniques_diff"))
+                                           "count_uniques", "count_uniques_diff",
+                                           "min", "min_diff", "max", "max_diff"))
 
       dec3_cols <- which(names(dat) %in% "diffmean_range")
       if (length(dec3_cols) > 0)
         addStyle(wb, sheet, dec3_style, rows = 2:n_rows, cols = dec3_cols, gridExpand = TRUE)
       if (length(num_cols) > 0)
         addStyle(wb, sheet, num_style, rows = 2:n_rows, cols = num_cols, gridExpand = TRUE)
-
-      dec2_cols <- which(names(dat) %in% c("min_diff", "max_diff"))
-      if (length(dec2_cols) > 0)
-        addStyle(wb, sheet, dec2_style, rows = 2:n_rows, cols = dec2_cols, gridExpand = TRUE)
     }
   }
 
@@ -847,7 +929,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
 
 # ------------------------------------------------------------------------------
-# 12. validace_pam_1_04()
+# 12. validace_pam()
 # Hlavní orchestrační funkce PAM validace.
 #
 # PARAMETRY:
@@ -865,17 +947,20 @@ write_pam_validation_xlsx <- function(report, path_out) {
 #              $strange_behaviour | $examples
 # ------------------------------------------------------------------------------
 
-validace_pam_1_04 <- function(
+validace_pam <- function(
     data,
     labels_clean       = NULL,
     path_out           = NULL,
     id_cols            = c("rok", "mes", "red_izo", "hosp_druh", "plat_rad", "druh_pam"),
     r_pattern          = "^r\\d{3}$",
+    facility_id        = "red_izo",
     outlier_multiplier = 3,
     max_na_ratio       = 0.95,
     max_outliers_ratio = 0.01,
     max_rok            = as.integer(format(Sys.Date(), "%Y")) - 1L,
-    verbose            = TRUE
+    verbose            = TRUE,
+    vykaz              = NULL,
+    oddil              = NULL
 ) {
 
   log <- function(...) if (verbose) message(...)
@@ -883,6 +968,9 @@ validace_pam_1_04 <- function(
   missing_cols <- setdiff(c(id_cols, "rok", "mes"), names(data))
   if (length(missing_cols) > 0)
     stop("V datech chybí sloupce: ", paste(missing_cols, collapse = ", "))
+
+  if ("mes" %in% names(data))
+    data <- data |> mutate(mes = str_pad(as.character(mes), width = 2, pad = "0"))
 
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
   if (length(r_cols) == 0)
@@ -901,7 +989,14 @@ validace_pam_1_04 <- function(
   }
 
   log("\n── Krok 1: Kontrola struktury dat ──────────────────────────────")
-  overview <- check_pam_structure(data, id_cols = id_cols, r_pattern = r_pattern)
+  id_cols_full <- if (facility_id %in% names(data) && !facility_id %in% id_cols) {
+    mes_pos <- which(id_cols == "mes")
+    if (length(mes_pos) > 0)
+      c(id_cols[seq_len(mes_pos)], facility_id, id_cols[-seq_len(mes_pos)])
+    else
+      c(id_cols, facility_id)
+  } else id_cols
+  overview <- check_pam_structure(data, id_cols = id_cols_full, r_pattern = r_pattern)
   log("  Řádků: ", overview$n_rows,
       " | r-kových proměnných: ", overview$n_r_variables,
       " | Duplicitní klíče: ", overview$n_duplicate_keys)
@@ -927,7 +1022,9 @@ validace_pam_1_04 <- function(
     freq_table         = freq_table,
     coverage_table     = coverage,
     r_pattern          = r_pattern,
-    outlier_multiplier = outlier_multiplier
+    outlier_multiplier = outlier_multiplier,
+    vykaz              = vykaz,
+    oddil              = oddil
   )
   log("  Hotovo – ", nrow(summary_table), " proměnných zpracováno.")
 
@@ -948,28 +1045,34 @@ validace_pam_1_04 <- function(
     id_cols        = id_cols,
     summary_table  = summary_table,
     coverage_table = coverage,
-    r_pattern      = r_pattern
+    r_pattern      = r_pattern,
+    facility_id    = facility_id
   )
   log("  Příklady sestaveny: ", nrow(examples), " záznamů.")
 
-  top_outlier_facilities <- if ("red_izo" %in% names(data) &&
+  top_outlier_facilities <- if (facility_id %in% names(data) &&
                                 "outlier_limit" %in% names(summary_table)) {
     r_cols_all <- names(data)[str_detect(names(data), r_pattern)]
     data |>
-      select(red_izo, all_of(r_cols_all)) |>
+      select(all_of(facility_id), all_of(r_cols_all)) |>
       pivot_longer(cols = all_of(r_cols_all),
                    names_to = "polozka_index", values_to = "v") |>
       mutate(v_num = suppressWarnings(as.numeric(v))) |>
       left_join(summary_table |> select(polozka_index, outlier_limit),
                 by = "polozka_index") |>
       filter(!is.na(outlier_limit), !is.na(v_num), v_num > outlier_limit) |>
-      count(red_izo, name = "n_outl") |>
+      count(.data[[facility_id]], name = "n_outl") |>
       arrange(desc(n_outl)) |>
       filter(n_outl >= 5) |>
       slice_head(n = 20)
   } else {
-    tibble(red_izo = character(), n_outl = integer())
+    tibble(!!sym(facility_id) := character(), n_outl = integer())
   }
+
+  n_empty_facility_id <- if (facility_id %in% names(data)) {
+    fac <- data[[facility_id]]
+    sum(is.na(fac) | fac == "", na.rm = TRUE)
+  } else NA_integer_
 
   report <- list(
     overview               = overview,
@@ -979,7 +1082,9 @@ validace_pam_1_04 <- function(
     strange_behaviour      = strange_behaviour,
     examples               = examples,
     top_outlier_facilities = top_outlier_facilities,
-    max_rok_filter         = effective_max_rok
+    max_rok_filter         = effective_max_rok,
+    facility_id            = facility_id,
+    n_empty_facility_id    = n_empty_facility_id
   )
 
   if (!is.null(path_out)) {

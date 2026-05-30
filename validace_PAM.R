@@ -43,15 +43,16 @@ if (!dir.exists(path_out_dir)) dir.create(path_out_dir, recursive = TRUE)
 # NAČTENÍ DAT
 # ==============================================================================
 
+facility_id <- c("red_izo", "rid", "ico")
+id_cols <- c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam")
+
 # --- P1-04 ---
 pam_1_04_all <- read_parquet(
   file.path(path_parquet, "P1-04", "parquet", "pam_1_04_all_long_raw.parquet")
 )
 
-id_cols <- c("rok", "mes", "red_izo", "hosp_druh", "plat_rad", "druh_pam")
-
 pam_1_04 <- pam_1_04_all |>
-  select(all_of(id_cols), matches("^r\\d{3}$"))
+  select(all_of(id_cols), any_of(facility_id), matches("^r\\d{3}$"))
 
 # --- P1a ---
 pam_1a_all <- read_parquet(
@@ -59,8 +60,19 @@ pam_1a_all <- read_parquet(
 )
 
 pam_1a <- pam_1a_all |>
-  select(any_of(id_cols), matches("^r\\d{1}")) # bez druh_pam
+  select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}"))
 
+
+# --- P1c ---
+files_p1c   <- list.files(
+  file.path(path_parquet, "P1c", "parquet"),
+  pattern    = "^odd_.*\\.parquet$",
+  full.names = TRUE
+)
+pam_p1c_all <- setNames(
+  map(files_p1c, read_parquet),
+  str_match(basename(files_p1c), "^odd_(.+)\\.parquet$")[, 2]
+)
 
 
 # ==============================================================================
@@ -71,7 +83,7 @@ labels_clean <- prep_pam_labels(path_labels)
 
 
 # ==============================================================================
-# SPUŠTĚNÍ VALIDACE
+# SPUŠTĚNÍ VALIDACE P1-04
 # ==============================================================================
 
 path_out_pam <- file.path(
@@ -79,18 +91,19 @@ path_out_pam <- file.path(
   paste0("p1_04_validace_", datum_test, ".xlsx")
 )
 
-report_pam <- validace_pam_1_04(
+report_pam <- validace_pam(
   data         = pam_1_04,
   labels_clean = labels_clean,
   path_out     = path_out_pam,
   id_cols      = id_cols,
-  max_rok      = 2024
+  facility_id  = "red_izo",
+  max_rok      = 2024,
+  vykaz        = "p1"
 )
 
 
-# ==============================================================================
-# PŘÍKLADY NÁSLEDNÉ ANALÝZY
-# ==============================================================================
+# Příklady následné analýzy
+# ------------------------------------------------------------------------------
 
 # Přehled frekvencí měření
 report_pam$freq_table |>
@@ -132,3 +145,52 @@ report_pam$coverage |>
   select(polozka_index, rok, mereni_ok) |>
   pivot_wider(names_from = rok, values_from = mereni_ok) |>
   View()
+
+
+# ==============================================================================
+# SPUŠTĚNÍ VALIDACE P1a
+# ==============================================================================
+
+path_out_pam_1a <- file.path(
+  path_out_dir,
+  paste0("p1a_validace_", datum_test, ".xlsx")
+)
+
+report_pam_1a <- validace_pam(
+  data         = pam_1a,
+  labels_clean = labels_clean,
+  path_out     = path_out_pam_1a,
+  id_cols      = intersect(id_cols, names(pam_1a)),
+  facility_id  = "rid",
+  r_pattern    = "^r\\d{1}",
+  max_rok      = 2024,
+  vykaz        = "1a"
+)
+
+
+# ==============================================================================
+# SPUŠTĚNÍ VALIDACE P1c
+# ==============================================================================
+
+id_cols_1c <- c("rok", "mes", "red_izo", "stupen", "druh", "kategorie", "zdroj")
+
+iwalk(pam_p1c_all, function(d, oddil) {
+  if (oddil == "0") return(invisible(NULL))
+
+  path_out_f <- file.path(
+    path_out_dir,
+    paste0("p1c_", oddil, "_validace_", datum_test, ".xlsx")
+  )
+
+  validace_pam(
+    data         = d,
+    labels_clean = labels_clean,
+    path_out     = path_out_f,
+    id_cols      = intersect(id_cols_1c, names(d)),
+    facility_id  = "red_izo",
+    r_pattern    = "^r\\d",
+    max_rok      = 2024,
+    vykaz        = "1c",
+    oddil        = oddil
+  )
+})

@@ -30,7 +30,7 @@ Required packages: `arrow`, `dplyr`, `tibble`, `stringr`, `tidyr`, `purrr`, `rea
 Two files:
 
 - **`validace_PAM_funkce.R`** — all reusable functions; sourced at the start of the main script
-- **`validace_PAM.R`** — orchestration: sets paths, loads data, calls `validace_pam_1_04()`, writes output
+- **`validace_PAM.R`** — orchestration: sets paths, loads data, calls `validace_pam()`, writes output
 
 ### Data flow
 
@@ -42,7 +42,7 @@ Datový model – výstupy/PaM/<datum_test>/
 Datový model – metadata/PaM/pamvykpol_labels.xlsx
   → variable labels (polozka, polozka_index, zkr, vykaz)
 
-→ validace_pam_1_04(data, labels_clean, path_out)
+→ validace_pam(data, labels_clean, path_out)
   → prep_pam_labels()            loads pamvykpol_labels.xlsx, filters r-variables, renames zkr → label_result
   → detect_mereni_frequency()    classifies each variable by measurement frequency
   → check_mereni_coverage()      verifies year-level coverage against expected frequency; wide table rok × variable
@@ -70,7 +70,7 @@ Output: Výkazy-validace/<YYMMDD>/pam_1_04_validace_<YYMMDD>.xlsx
 | `make_pam_strange_behaviour(summary_table, max_na_ratio, max_outliers_ratio)` | Adds flag columns; sorts by severity |
 | `make_pam_examples(data, id_cols, summary_table, r_pattern, max_examples_per_type)` | Up to 100 example rows per problem type (negative, non-integer, outlier) |
 | `write_pam_validation_xlsx(report, path_out)` | Writes 4-sheet XLSX (Report overview, Summary, Strange behaviour, Example of strange behaviour). Summary column order: `polozka_index`, `typ_promenne`, `count_years`, `count_mes`, `modus_mesicu_za_rok`, `frekvence_mereni`, `na_ratio`, `zeros_ratio`, `count_uniques`, `min`, `max`, `is_negative`, `outliers_ratio`, `label_result`, `first_year`, `last_year`, then `year<rok>` coverage columns. `min` and `max` formatted with thousands separator. |
-| `validace_pam_1_04(data, labels_clean, path_out, id_cols, max_rok)` | Main orchestrator; calls all of the above and returns the report list. `max_rok` filters data to `rok <= max_rok` before processing (default: current year − 1; `NULL` skips filtering) |
+| `validace_pam(data, labels_clean, path_out, id_cols, max_rok)` | Main orchestrator; calls all of the above and returns the report list. `max_rok` filters data to `rok <= max_rok` before processing (default: current year − 1; `NULL` skips filtering) |
 
 ### Output XLSX sheets
 
