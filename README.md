@@ -16,16 +16,16 @@ Metodika obsahuje:
 ## 🗂️ Obsah repozitáře
 
 ```
-.
+validace-pam/
 ├── README.md                           # Tento soubor
-├── validace PaM - metodika.qmd         # Zdrojový Quarto dokument
-├── docs/
-│   ├── index.html                      # Vyrendrovaná metodika (web)
-│   └── Soubory/
-│       └── example_compare_p1c.png    # Obrázky a příklady
+├── validace PaM - metodika.qmd         # Zdrojový Quarto dokument (metodika)
 ├── validace_PAM.R                      # Hlavní skript pro spuštění validace
 ├── validace_PAM_funkce.R               # Knihovna funkcí pro validaci
-└── CLAUDE.md                           # Dokumentace projektu
+├── Subanalýzy/
+│   └── kontrola_prazdnych_labelu.R    # Pomocný skript pro analýzy
+└── docs/
+    ├── index.html                      # Vyrendrovaná metodika (GitHub Pages)
+    └── example_compare_p1c.png         # Obrázek z metodiky
 ```
 
 ## 🚀 Spuštění validace
