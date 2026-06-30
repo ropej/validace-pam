@@ -82,7 +82,7 @@ library(openxlsx)
 
 Romana Pejcalová  
 IPs DATA, MŠMT  
-r.pejcalova@gmail.com
+romana.pejcalova@msmt.gov.cz
 
 ## 📝 Poznámka
 
