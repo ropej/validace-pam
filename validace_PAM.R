@@ -18,7 +18,7 @@ source("validace_PAM_funkce.R")
 # NASTAVENÍ CEST
 # ==============================================================================
 
-datum_test <- "260421"   # YYMMDD – datum testovací sady
+datum_test <- "260612"   # YYMMDD – datum testovací sady; 260604, 260421, 260612
 
 base_path <- "C:/Users/pejcalovar/OneDrive - MSMT/Analytický útvar - KA 4 - Vybudování datové základny - 7. Datový model školy"
 
@@ -38,13 +38,30 @@ path_out_dir <- file.path(
 
 if (!dir.exists(path_out_dir)) dir.create(path_out_dir, recursive = TRUE)
 
+# Kontrolní (starší) várka, vůči které se porovnává
+datum_control    <- "260421"   # YYMMDD – datum kontrolní sady
+path_control_dir <- file.path(dirname(path_out_dir), datum_control)
+
+# Jsou reporty pro datum_test už vygenerované? Pokud ano, generování přeskočíme
+# a rovnou se jen porovnává (viz sekce SROVNÁNÍ na konci skriptu).
+reporty_existuji <- dir.exists(path_out_dir) &&
+  length(list.files(path_out_dir, pattern = "validace_.*\\.xlsx$")) > 0
+
+if (reporty_existuji) {
+
+  message("Reporty pro ", datum_test, " už existují → generování přeskakuji.")
+
+} else {
+
+  message("Reporty pro ", datum_test, " neexistují → spouštím validace…")
+
 
 # ==============================================================================
 # NAČTENÍ DAT
 # ==============================================================================
 
 facility_id <- c("red_izo", "rid", "ico")
-id_cols <- c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam")
+id_cols <- c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam", "druh")
 
 # --- P1-04 ---
 pam_1_04_all <- read_parquet(
@@ -52,7 +69,8 @@ pam_1_04_all <- read_parquet(
 )
 
 pam_1_04 <- pam_1_04_all |>
-  select(all_of(id_cols), any_of(facility_id), matches("^r\\d{3}$"))
+  select(any_of(id_cols), any_of(facility_id), matches("^r\\d{3}")) |>
+  rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{3}"))
 
 # --- P1a ---
 pam_1a_all <- read_parquet(
@@ -60,7 +78,8 @@ pam_1a_all <- read_parquet(
 )
 
 pam_1a <- pam_1a_all |>
-  select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}"))
+  select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}")) |>
+  rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{1}"))
 
 
 # --- P1c ---
@@ -95,7 +114,7 @@ report_pam <- validace_pam(
   data         = pam_1_04,
   labels_clean = labels_clean,
   path_out     = path_out_pam,
-  id_cols      = id_cols,
+  id_cols      = intersect(id_cols, names(pam_1_04)),
   facility_id  = "red_izo",
   max_rok      = 2024,
   vykaz        = "p1"
@@ -172,8 +191,6 @@ report_pam_1a <- validace_pam(
 # SPUŠTĚNÍ VALIDACE P1c
 # ==============================================================================
 
-id_cols_1c <- c("rok", "mes", "red_izo", "stupen", "druh", "kategorie", "zdroj")
-
 iwalk(pam_p1c_all, function(d, oddil) {
   if (oddil == "0") return(invisible(NULL))
 
@@ -186,11 +203,35 @@ iwalk(pam_p1c_all, function(d, oddil) {
     data         = d,
     labels_clean = labels_clean,
     path_out     = path_out_f,
-    id_cols      = intersect(id_cols_1c, names(d)),
+    id_cols      = intersect(id_cols, names(d)),
     facility_id  = "red_izo",
-    r_pattern    = "^r\\d",
+    r_pattern    = "^r\\d{1}",
     max_rok      = 2024,
     vykaz        = "1c",
     oddil        = oddil
   )
 })
+
+}  # konec else (blok generování reportů)
+
+
+# ==============================================================================
+# SROVNÁNÍ S KONTROLNÍ VÁRKOU
+# ==============================================================================
+# Porovná hotové reporty z path_out_dir s kontrolní várkou v path_control_dir.
+# Funguje, ať se reporty právě vygenerovaly, nebo už existovaly z dřívějška.
+
+if (dir.exists(path_control_dir)) {
+  compare_all <- porovnej_pam_varky(path_test    = path_out_dir,
+                                    path_control = path_control_dir)
+
+  print(compare_all$count_neshod)   # počty neshod po výkazech + řádek CELKEM
+
+  # Ulož compare výsledky do Excel reportu
+  path_compare_xlsx <- file.path(path_out_dir, paste0("Porovnani_", datum_test, "_vs_", datum_control, ".xlsx"))
+  write_pam_compare_xlsx(compare_all, path_compare_xlsx)
+  message("Compare report uložen: ", basename(path_compare_xlsx))
+} else {
+  message("Kontrolní složka neexistuje: ", path_control_dir,
+          "\nSrovnání přeskočeno – zkontroluj 'datum_control'.")
+}

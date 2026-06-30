@@ -573,7 +573,7 @@ Tabulka s neshodami **po proměnných** (z listů „Summary" a „Strange behav
 #| echo: false
 #| out-width: "90%"
 #| fig-cap: "Ukázka listu Summary P1c"
-knitr::include_graphics("Soubory/example_compare_p1c.png")
+knitr::include_graphics("example_compare_p1c.png")
 ```
 
 ## Implementace

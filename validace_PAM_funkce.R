@@ -30,9 +30,11 @@ is_integer_tol <- function(x, tol = .Machine$double.eps^0.5) {
 
 
 # ------------------------------------------------------------------------------
-# 2. upper_outlier_limit()
-# Výpočet horní hranice outlierů pomocí IQR pravidla
-# Ignoruje nuly a NA při výpočtu kvantilů.
+# 2. upper_outlier_limit() / lower_outlier_limit()
+# Výpočet hranic outlierů pomocí IQR pravidla.
+# upper: ignoruje nuly a NA (nuly jsou strukturální, ne datová hodnota).
+# lower: ignoruje jen NA – nula v diferenci znamená „žádná změna" a musí
+#        vstoupit do výpočtu kvantilů jako platný referenční bod.
 # ------------------------------------------------------------------------------
 
 upper_outlier_limit <- function(x, multiplier = 3) {
@@ -41,6 +43,14 @@ upper_outlier_limit <- function(x, multiplier = 3) {
   q   <- quantile(x, c(0.25, 0.75), na.rm = TRUE)
   iqr <- diff(q)
   as.numeric(q[2] + multiplier * iqr)
+}
+
+lower_outlier_limit <- function(x, multiplier = 3) {
+  x <- x[!is.na(x)]
+  if (length(x) < 2) return(NA_real_)
+  q   <- quantile(x, c(0.25, 0.75), na.rm = TRUE)
+  iqr <- diff(q)
+  as.numeric(q[1] - multiplier * iqr)
 }
 
 
@@ -198,9 +208,10 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
     left_join(mes_modus, by = "polozka_index") |>
     mutate(
       frekvence_mereni = case_when(
+        is.na(modus_mesicu)         ~ "neměřeno",
         modus_mesicu == 12          ~ "měsíční",
-        modus_mesicu %in% c(3, 4)  ~ "čtvrtletní",
-        modus_mesicu == 2           ~ "pololetní",
+        modus_mesicu == 6           ~ "pololetní",
+        modus_mesicu == 4           ~ "čtvrtletní",
         modus_mesicu == 1           ~ "roční",
         TRUE                        ~ "nepravidelná"
       ),
@@ -334,10 +345,10 @@ summarise_pam_variables <- function(data, id_cols,
       min               = if (length(x_noNA) > 0) min(x_noNA)  else NA_real_,
       max               = if (length(x_noNA) > 0) max(x_noNA)  else NA_real_,
       is_negative       = if (length(x_noNA) > 0) any(x_noNA < 0) else NA,
-      count_notintegers = sum(!is_integer_tol(x_num), na.rm = TRUE),
-      outlier_limit     = out_lim,
-      outliers_ratio    = if (is.na(out_lim)) NA_real_
-                          else mean(x_num[mask] > out_lim, na.rm = TRUE),
+      count_notintegers   = sum(!is_integer_tol(x_num), na.rm = TRUE),
+      outlier_limit_upper = out_lim,
+      outliers_ratio      = if (is.na(out_lim)) NA_real_
+                            else mean(x_num[mask] > out_lim, na.rm = TRUE),
       count_years       = n_distinct(data$rok[mask]),
       first_year        = suppressWarnings(min(data$rok[mask], na.rm = TRUE)),
       last_year         = suppressWarnings(max(data$rok[mask], na.rm = TRUE)),
@@ -391,18 +402,24 @@ summarise_pam_variables <- function(data, id_cols,
 
   if (!is.null(diff_data)) {
     diff_stats <- map_dfr(vars_for_diff, \(var) {
-      diffs_num  <- diff_data[[var]]
-      diffs_noNA <- diffs_num[!is.na(diffs_num)]
-      out_lim_d  <- upper_outlier_limit(diffs_num, multiplier = outlier_multiplier)
-      mask_d     <- !is.na(diffs_num)
+      diffs_num   <- diff_data[[var]]
+      diffs_noNA  <- diffs_num[!is.na(diffs_num)]
+      out_upper   <- upper_outlier_limit(diffs_num, multiplier = outlier_multiplier)
+      out_lower   <- lower_outlier_limit(diffs_num, multiplier = outlier_multiplier)
+      mask_d      <- !is.na(diffs_num)
+      n_valid     <- sum(mask_d)
 
       tibble(
         polozka_index       = var,
         count_uniques_diff  = n_distinct(diffs_num, na.rm = TRUE),
         min_diff            = if (length(diffs_noNA) > 0) min(diffs_noNA) else NA_real_,
         max_diff            = if (length(diffs_noNA) > 0) max(diffs_noNA) else NA_real_,
-        outliers_ratio_diff = if (is.na(out_lim_d)) NA_real_
-                              else mean(diffs_num[mask_d] > out_lim_d, na.rm = TRUE)
+        outlier_limit_lower = out_lower,
+        outliers_ratio_diff = if (n_valid == 0) NA_real_ else {
+          up <- if (!is.na(out_upper)) diffs_num[mask_d] > out_upper else rep(FALSE, n_valid)
+          lo <- if (!is.na(out_lower)) diffs_num[mask_d] < out_lower else rep(FALSE, n_valid)
+          mean(up | lo, na.rm = TRUE)
+        }
       )
     })
     summary_table <- summary_table |> left_join(diff_stats, by = "polozka_index")
@@ -466,7 +483,9 @@ summarise_pam_variables <- function(data, id_cols,
 
     label_keys <- if (!is.null(oddil)) {
       code <- oddil_to_code(oddil)
-      paste0("r", code, "0", str_extract(summary_table$polozka_index, "\\d{2}$"))
+      # Odseknout suffix .P1C (nebo jakýkoli suffix po tečce)
+      polozka_clean <- str_remove(summary_table$polozka_index, "\\..*$")
+      paste0("r", code, "0", str_extract(polozka_clean, "\\d{2}$"))
     } else if (r_pattern == "^r\\d{3}$") {
       str_replace(summary_table$polozka_index, "^r(\\d)(\\d{2})$", "r0\\10\\2")
     } else {
@@ -515,7 +534,10 @@ make_pam_strange_behaviour <- function(summary_table,
         if_else(diffmean_range < 0.001, FALSE,
                 diffmean_range >= quantile(diffmean_range, probs = 0.95, na.rm = TRUE))
       else NA,
-      greater_outliers_ratio     = !is.na(outliers_ratio) & outliers_ratio > max_outliers_ratio,
+      greater_outliers_ratio     = if ("outliers_ratio_diff" %in% names(summary_table))
+        !is.na(outliers_ratio_diff) & outliers_ratio_diff > max_outliers_ratio
+      else
+        !is.na(outliers_ratio) & outliers_ratio > max_outliers_ratio,
       existing_label             = if (has_label) (!is.na(label_result) & label_result != "") else NA,
       inconsistent_mereni        = if (has_coverage) {
         if (has_freq) {
@@ -587,7 +609,7 @@ make_pam_examples <- function(data, id_cols, summary_table,
                  names_to  = "polozka_index",
                  values_to = "value") |>
     mutate(value_num = suppressWarnings(as.numeric(value))) |>
-    left_join(summary_table |> select(polozka_index, outlier_limit),
+    left_join(summary_table |> select(polozka_index, outlier_limit_upper),
               by = "polozka_index")
 
   # --- NAs_example: počet NA per rok (jen v měřených rocích) ---
@@ -603,7 +625,7 @@ make_pam_examples <- function(data, id_cols, summary_table,
 
   # --- outliers_per_year: počet outlierů per rok ---
   outl_year_tbl <- long_data |>
-    filter(!is.na(outlier_limit), !is.na(value_num), value_num > outlier_limit) |>
+    filter(!is.na(outlier_limit_upper), !is.na(value_num), value_num > outlier_limit_upper) |>
     count(polozka_index, rok, name = "n_outl") |>
     arrange(polozka_index, rok) |>
     group_by(polozka_index) |>
@@ -613,7 +635,7 @@ make_pam_examples <- function(data, id_cols, summary_table,
   # --- outliers_per_facility: red_izo s > 5 outl, jen nejvyšší úroveň ---
   outl_fac_tbl <- if (facility_id %in% names(data)) {
     long_data |>
-      filter(!is.na(outlier_limit), !is.na(value_num), value_num > outlier_limit) |>
+      filter(!is.na(outlier_limit_upper), !is.na(value_num), value_num > outlier_limit_upper) |>
       count(polozka_index, .data[[facility_id]], name = "n_outl") |>
       filter(n_outl > 5) |>
       group_by(polozka_index) |>
@@ -736,15 +758,59 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- r + nrow(tbl_freq) + 1L
 
   # Metriky (label | hodnota)
+  # Výskyt závažných chyb a zvláštního chování
+  sb <- report$strange_behaviour
+  n_total_vars <- nrow(sb)
+
+  # Závažné chyby — počet proměnných s právě N chybami
+  serious_by_count <- table(sb$count_serious_errors[sb$count_serious_errors > 0])
+  kv_extra_labels <- character()
+  kv_extra_values <- character()
+
+  if (length(serious_by_count) > 0) {
+    first <- TRUE
+    for (n_chyb in sort(as.numeric(names(serious_by_count)), decreasing = TRUE)) {
+      n_vars <- serious_by_count[as.character(n_chyb)]
+      if (n_chyb == 1) label_chyb <- "chyba" else label_chyb <- "chyby"
+      if (first) {
+        kv_extra_labels <- c(kv_extra_labels, "Výskyt závažných chyb")
+        first <- FALSE
+      } else {
+        kv_extra_labels <- c(kv_extra_labels, "")
+      }
+      kv_extra_values <- c(kv_extra_values, paste0(n_vars, " / ", n_total_vars, " (", n_chyb, " ", label_chyb, ")"))
+    }
+  }
+
+  # Zvláštní chování — počet proměnných s právě N anomáliemi
+  strange_by_count <- table(sb$count_strange_behaviour[sb$count_strange_behaviour > 0])
+
+  if (length(strange_by_count) > 0) {
+    first <- TRUE
+    for (n_anom in sort(as.numeric(names(strange_by_count)), decreasing = TRUE)) {
+      n_vars <- strange_by_count[as.character(n_anom)]
+      if (n_anom == 1) label_anom <- "anomálie" else label_anom <- "anomálie"
+      if (first) {
+        kv_extra_labels <- c(kv_extra_labels, "Výskyt zvláštního chování")
+        first <- FALSE
+      } else {
+        kv_extra_labels <- c(kv_extra_labels, "")
+      }
+      kv_extra_values <- c(kv_extra_values, paste0(n_vars, " / ", n_total_vars, " (", n_anom, " ", label_anom, ")"))
+    }
+  }
+
   kv <- tibble(
     label = c("Identifikátor zařízení",
               "Počet let", "Počet řádků",
+              kv_extra_labels,
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
               "Počet prázdných labelů",
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
     value = c(if (!is.null(report$facility_id)) report$facility_id else "",
               as.character(max_years), as.character(report$overview$n_rows),
+              kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
               as.character(n_empty_lbl),
               as.character(exist_inkonz),
@@ -784,7 +850,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
   }
 
   summary_out <- report$summary |>
-    select(-any_of(c("count_notintegers", "outlier_limit",
+    select(-any_of(c("count_notintegers", "outlier_limit_upper", "outlier_limit_lower",
                      "mereni_ok_ratio", "roky_s_merenims"))) |>
     left_join(coverage_wide_cols, by = "polozka_index") |>
     select(
@@ -947,6 +1013,448 @@ write_pam_validation_xlsx <- function(report, path_out) {
 #              $strange_behaviour | $examples
 # ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+# porovnej_pam_reporty(): srovná dvě várky PaM validačních xlsx reportů.
+#   Analogie compare_data z DM (validace_dat.R) – oba reporty se čtou z disku.
+# VSTUP:
+#   path_control_xlsx – cesta ke kontrolnímu (staršímu) reportu .xlsx
+#   path_test_xlsx    – cesta k testovanému (novému) reportu .xlsx
+# VÝSTUP: list
+#   $overview_compare – neshody v metrikách listu "Report overview"
+#   $summary_compare  – neshody po proměnných (polozka_index × sledovaná hodnota)
+#                       z listů "Summary" + "Strange behaviour"
+#   $count_neshod     – počet neshod (overview / summary)
+# ------------------------------------------------------------------------------
+porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
+
+  # bezpečné načtení listu (prázdný tibble, když list/soubor chybí)
+  nacti_list <- function(path, sheet) {
+    if (!file.exists(path) || !sheet %in% readxl::excel_sheets(path)) return(tibble())
+    suppressMessages(readxl::read_excel(path, sheet = sheet))
+  }
+
+  # Summary + Strange behaviour spojené podle polozka_index do jedné tabulky
+  nacti_promenne <- function(path) {
+    s  <- nacti_list(path, "Summary")
+    sb <- nacti_list(path, "Strange behaviour")
+    if (nrow(s) == 0 && nrow(sb) == 0) return(tibble(polozka_index = character()))
+    # ze SB zahoď sloupce duplicitní se Summary (count_years, label_result, …) kromě klíče
+    if (nrow(sb) > 0 && nrow(s) > 0)
+      sb <- sb |> select(-any_of(setdiff(intersect(names(sb), names(s)), "polozka_index")))
+    if (nrow(s) > 0 && nrow(sb) > 0)      full_join(s, sb, by = "polozka_index")
+    else if (nrow(s) > 0)                 s
+    else                                  sb
+  }
+
+  # metriky (label | hodnota) z listu "Report overview" – jen whitelist kv řádků
+  ov_labels <- c("Identifikátor zařízení", "Počet let", "Počet řádků",
+                 "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
+                 "Počet prázdných labelů", "Existence nekonzistentního měření",
+                 "Existence duplicit", "Počet duplicit")
+  nacti_overview <- function(path) {
+    if (!file.exists(path) || !"Report overview" %in% readxl::excel_sheets(path))
+      return(tibble(variable = character(), value = character()))
+    df <- suppressMessages(readxl::read_excel(path, sheet = "Report overview", col_names = FALSE))
+    if (ncol(df) < 2) return(tibble(variable = character(), value = character()))
+    names(df)[1:2] <- c("variable", "value")
+    df |>
+      transmute(variable = as.character(variable), value = as.character(value)) |>
+      filter(variable %in% ov_labels) |>
+      bind_rows(
+        # Agreguj "Výskyt závažných chyb" a "Výskyt zvláštního chování" — sečti počty
+        {
+          df_all <- df |> transmute(variable = as.character(variable), value = as.character(value))
+
+          # Závažné chyby
+          serious_rows <- df_all |> filter(str_detect(variable, "^Výskyt závažných chyb"))
+          if (nrow(serious_rows) > 0) {
+            serious_sum <- sum(as.numeric(str_extract(serious_rows$value, "^\\d+")), na.rm = TRUE)
+            serious_agg <- tibble(variable = "Výskyt závažných chyb",
+                                 value = as.character(serious_sum))
+          } else {
+            serious_agg <- tibble(variable = character(), value = character())
+          }
+
+          # Zvláštní chování
+          strange_rows <- df_all |> filter(str_detect(variable, "^Výskyt zvláštního chování"))
+          if (nrow(strange_rows) > 0) {
+            strange_sum <- sum(as.numeric(str_extract(strange_rows$value, "^\\d+")), na.rm = TRUE)
+            strange_agg <- tibble(variable = "Výskyt zvláštního chování",
+                                 value = as.character(strange_sum))
+          } else {
+            strange_agg <- tibble(variable = character(), value = character())
+          }
+
+          bind_rows(serious_agg, strange_agg)
+        }
+      )
+  }
+
+  # --- 1. overview compare ----------------------------------------------------
+  overview_compare <- full_join(
+    nacti_overview(path_control_xlsx) |> rename(value_control = value),
+    nacti_overview(path_test_xlsx)    |> rename(value_test    = value),
+    by = "variable"
+  ) |>
+    mutate(shoda = replace_na(value_control, "") == replace_na(value_test, "")) |>
+    filter(!shoda) |>
+    select(variable, value_control, value_test)
+
+  # --- 2. summary + strange behaviour compare (po polozka_index) -------------
+  prom_c <- nacti_promenne(path_control_xlsx) |>
+    mutate(polozka_index = str_remove(polozka_index, "\\..*$"))
+  prom_t <- nacti_promenne(path_test_xlsx) |>
+    mutate(polozka_index = str_remove(polozka_index, "\\..*$"))
+
+  # porovnávej jen sloupce přítomné v OBOU reportech (jinak by sloupec navíc
+  # hlásil neshodu u každé proměnné)
+  spolecne <- union("polozka_index", intersect(names(prom_c), names(prom_t)))
+  prom_c <- prom_c |> select(any_of(spolecne))
+  prom_t <- prom_t |> select(any_of(spolecne))
+
+  # existence proměnné v obou várkách
+  exist <- full_join(
+    prom_c |> distinct(polozka_index) |> mutate(v_control = TRUE),
+    prom_t |> distinct(polozka_index) |> mutate(v_test    = TRUE),
+    by = "polozka_index"
+  )
+
+  long <- function(df) {
+    if (nrow(df) == 0)
+      return(tibble(polozka_index = character(), variable = character(), value = character()))
+    df |>
+      mutate(across(everything(), as.character)) |>
+      pivot_longer(-polozka_index, names_to = "variable", values_to = "value")
+  }
+
+  # Nejdřív porovnání proměnných, které jsou v obou várkách
+  summary_compare_shared <- full_join(
+    long(prom_c) |> rename(value_control = value),
+    long(prom_t) |> rename(value_test    = value),
+    by = c("polozka_index", "variable")
+  ) |>
+    semi_join(exist |> filter(v_control & v_test), by = "polozka_index") |>
+    mutate(shoda = case_when(
+      is.na(value_control) & is.na(value_test) ~ TRUE,
+      value_control == value_test              ~ TRUE,
+      TRUE                                     ~ FALSE
+    )) |>
+    filter(!shoda) |>
+    select(polozka_index, variable, value_control, value_test)
+
+  # Pak proměnné, které jsou jen v jedné várce
+  summary_compare_only <- exist |>
+    filter(!(v_control & v_test)) |>
+    mutate(
+      value_control = case_when(is.na(v_test)    ~ "jen v control", TRUE ~ NA_character_),
+      value_test    = case_when(is.na(v_control) ~ "jen v test",    TRUE ~ NA_character_)
+    ) |>
+    transmute(polozka_index,
+              variable      = "exist",
+              value_control,
+              value_test)
+
+  summary_compare <- bind_rows(summary_compare_shared, summary_compare_only) |>
+    arrange(polozka_index, variable)
+
+  list(
+    overview_compare = overview_compare,
+    summary_compare  = summary_compare,
+    count_neshod     = tibble(cast = c("overview", "summary"),
+                              n    = c(nrow(overview_compare), nrow(summary_compare)))
+  )
+}
+
+
+# ------------------------------------------------------------------------------
+# porovnej_pam_varky(): dávkové srovnání DVOU SLOŽEK s hotovými xlsx reporty.
+#   Nic se nevaliduje znovu – jen se spárují a porovnají existující reporty.
+# VSTUP:
+#   path_test    – složka s novou (testovanou) várkou reportů
+#   path_control – složka s kontrolní (starší) várkou reportů
+# VÝSTUP: list
+#   $overview_compare / $summary_compare – slepené neshody přes všechny výkazy
+#                                          (se sloupcem `vykaz`)
+#   $count_neshod – počty neshod po výkazech + řádek CELKEM
+# ------------------------------------------------------------------------------
+porovnej_pam_varky <- function(path_test, path_control) {
+  if (!dir.exists(path_test))    stop("path_test neexistuje: ", path_test)
+  if (!dir.exists(path_control)) stop("path_control neexistuje: ", path_control)
+
+  bez_zamku <- function(x) x[!str_starts(basename(x), fixed("~$"))]  # vynech dočasné excel zámky
+  test_files <- bez_zamku(list.files(path_test, pattern = "\\.xlsx$",
+                                     full.names = TRUE, recursive = TRUE))
+  control_files <- bez_zamku(list.files(path_control, pattern = "\\.xlsx$",
+                                        full.names = TRUE, recursive = TRUE))
+  if (length(test_files) == 0) stop("Ve složce 'path_test' nejsou žádné .xlsx reporty.")
+
+  # Extrahuj steamy (názvy výkazů bez data a bez _validace)
+  test_stems <- sub("_validace_\\d{6}\\.xlsx$", "", basename(test_files))
+  control_stems <- sub("_validace_\\d{6}\\.xlsx$", "", basename(control_files))
+
+  vysledky <- purrr::map(test_files, function(tf) {
+    stem <- sub("_validace_\\d{6}\\.xlsx$", "", basename(tf))
+    kand <- bez_zamku(list.files(path_control,
+                                 pattern = paste0("^", stem, ".*\\.xlsx$"),
+                                 full.names = TRUE, recursive = TRUE))
+    if (length(kand) == 0) {
+      message("⚠ '", stem, "': kontrolní report nenalezen – přeskočeno.")
+      return(NULL)
+    }
+    cf <- kand[which.max(file.info(kand)$mtime)]  # nejnovější odpovídající
+    list(vykaz = stem, cmp = porovnej_pam_reporty(cf, tf))
+  }) |> purrr::compact()
+
+  # Nové výkazy (v test ale ne v control)
+  nove <- setdiff(test_stems, control_stems)
+
+  # Ztracené výkazy (v control ale ne v test)
+  ztrucene <- setdiff(control_stems, test_stems)
+
+  # Tabulka chybějících/nových výkazů
+  missing_vykaz <- tibble(
+    vykaz = c(nove, ztrucene),
+    status = c(rep("jen v test", length(nove)), rep("jen v control", length(ztrucene)))
+  )
+
+  if (length(vysledky) == 0 && nrow(missing_vykaz) == 0) {
+    message("Nenalezeny žádné spárované reporty.")
+    return(list())
+  }
+
+  slep <- function(slot) purrr::map_dfr(vysledky, function(x) {
+    d <- x$cmp[[slot]]
+    if (nrow(d) > 0) mutate(d, vykaz = x$vykaz, .before = 1) else NULL
+  })
+
+  count_neshod <- purrr::map_dfr(vysledky, function(x)
+    tibble(vykaz    = x$vykaz,
+           overview = nrow(x$cmp$overview_compare),
+           summary  = nrow(x$cmp$summary_compare)))
+  count_neshod <- bind_rows(
+    count_neshod,
+    tibble(vykaz = "CELKEM",
+           overview = sum(count_neshod$overview),
+           summary  = sum(count_neshod$summary))
+  )
+
+  result <- list(
+    overview_compare = slep("overview_compare"),
+    summary_compare  = slep("summary_compare"),
+    count_neshod     = count_neshod
+  )
+
+  if (nrow(missing_vykaz) > 0) {
+    result$missing_vykaz <- missing_vykaz
+  }
+
+  result
+}
+
+
+# ------------------------------------------------------------------------------
+# format_summary_compare_wide()
+# Konvertuje summary_compare z long do wide formátu se zkrácenými labely
+# INPUT: summary_compare (long formát)
+# OUTPUT: wide tibble (polozka_index na řádku, metriky ve sloupcích)
+# ------------------------------------------------------------------------------
+
+format_summary_compare_wide <- function(summary_compare) {
+  if (nrow(summary_compare) == 0) return(tibble())
+
+  # Vyloučit label_result a not_negative (zachovat jen is_negative z Summary)
+  compare_long <- summary_compare |>
+    filter(!variable %in% c("label_result", "not_negative")) |>
+    mutate(
+      val_c_num = suppressWarnings(as.numeric(value_control)),
+      val_t_num = suppressWarnings(as.numeric(value_test)),
+      is_numeric = !is.na(val_c_num) & !is.na(val_t_num),
+      pct_change = if_else(
+        is_numeric,
+        abs((val_t_num - val_c_num) / pmax(abs(val_c_num), 0.0001)) * 100,
+        NA_real_
+      ),
+      direction = if_else(is_numeric & val_t_num > val_c_num, "vyšší ", "nižší "),
+      stars = case_when(
+        !is_numeric ~ NA_character_,
+        pct_change < 5 ~ "*",
+        pct_change < 20 ~ "**",
+        TRUE ~ "***"
+      ),
+      display_value = as.character(if_else(
+        variable == "exist",
+        paste(value_control, "/", value_test),
+        if_else(
+          is.na(value_control),
+          paste("(nový) →", value_test),
+          if_else(
+            is.na(value_test),
+            paste(value_control, "→ (chybí)"),
+            if_else(
+              is_numeric & val_c_num == val_t_num,
+              "(stejný)",
+              if_else(
+                is_numeric,
+                paste0(direction, stars),
+                if_else(
+                  value_control == value_test,
+                  "(stejný)",
+                  paste(value_control, "→", value_test)
+                )
+              )
+            )
+          )
+        )
+      ))
+    ) |>
+    select(vykaz, polozka_index, variable, display_value)
+
+  result <- compare_long |>
+    pivot_wider(
+      id_cols = c(vykaz, polozka_index),
+      names_from = variable,
+      values_from = display_value
+    ) |>
+    arrange(vykaz, polozka_index)
+
+  # Seřaď sloupce podle logického pořadí (jako ve zdrojových xlsx)
+  col_order <- c(
+    "vykaz", "polozka_index",
+    # Ze Summary
+    "typ_promenne", "count_years", "count_mes", "frekvence_mereni",
+    "na_ratio", "zeros_ratio", "is_negative",
+    "count_uniques_diff", "min_diff", "max_diff", "diffmean_range", "outliers_ratio_diff",
+    "first_year", "last_year",
+    # Ze Strange behaviour
+    "is_integer", "empty_variable", "without_na", "high_na_ratio", "one_unique_value",
+    "significant_diffmean_range", "greater_outliers_ratio",
+    "existing_label", "inconsistent_mereni", "mereni_ok_ratio",
+    "count_serious_errors", "count_strange_behaviour",
+    "exist"
+  )
+
+  # Vyber jen sloupce, které existují
+  col_order <- col_order[col_order %in% names(result)]
+  result |> select(all_of(col_order))
+}
+
+
+# ------------------------------------------------------------------------------
+# write_pam_compare_xlsx()
+# Uložení compare výsledků do Excel reportu
+# INPUT: compare list (výstup porovnej_pam_reporty), path_out
+# OUTPUT: .xlsx soubor se dvěma listy (Overview, Summary)
+# ------------------------------------------------------------------------------
+
+write_pam_compare_xlsx <- function(compare, path_out) {
+  wb <- createWorkbook()
+
+  # --- List 1: Overview (s vykaz sloupcem) ---
+  addWorksheet(wb, sheetName = "Overview")
+
+  overview_data <- compare$overview_compare
+  if (nrow(overview_data) > 0) {
+    overview_data <- overview_data |>
+      mutate(
+        display_value = case_when(
+          is.na(value_control) ~ paste0("(nový) → ", value_test),
+          is.na(value_test) ~ paste0(value_control, " → (chybí)"),
+          TRUE ~ paste0(value_control, " → ", value_test)
+        )
+      ) |>
+      select(vykaz, variable, display_value) |>
+      rename(Metrika = variable, "Control → Test" = display_value)
+  } else {
+    overview_data <- tibble(vykaz = character(), Metrika = character(), "Control → Test" = character())
+  }
+
+  # Přidej missing_vykaz pokud existuje (jen výkazy začínající na "p1")
+  if (!is.null(compare$missing_vykaz) && nrow(compare$missing_vykaz) > 0) {
+    missing_display <- compare$missing_vykaz |>
+      filter(str_detect(vykaz, "^p1")) |>
+      mutate(Metrika = vykaz, "Control → Test" = status) |>
+      select(vykaz, Metrika, "Control → Test")
+    if (nrow(missing_display) > 0) {
+      overview_data <- bind_rows(overview_data, missing_display)
+    }
+  }
+
+  writeData(wb, "Overview", overview_data)
+
+  # --- Listy 2-4: Summary dle výkazů ---
+  summary_wide <- format_summary_compare_wide(compare$summary_compare)
+  if (nrow(summary_wide) > 0) {
+    # Vynechej výkazy, které nezačínají na "p1"
+    summary_wide <- summary_wide |>
+      filter(str_detect(vykaz, "^p1")) |>
+      arrange(vykaz, polozka_index)
+  } else {
+    summary_wide <- tibble(vykaz = character(), polozka_index = character())
+  }
+
+  # Vytvoř 3 listy dle výkazů (jen když nejsou prázdné)
+  vykaz_sheets <- list(
+    list(pattern = "^p1_", sheet_name = "Summary P1-04"),
+    list(pattern = "^p1a", sheet_name = "Summary P1a"),
+    list(pattern = "^p1c", sheet_name = "Summary P1c")
+  )
+
+  created_summary_sheets <- list()
+
+  for (sheet_config in vykaz_sheets) {
+    sheet_data <- summary_wide |> filter(str_detect(vykaz, sheet_config$pattern))
+
+    # Ulož list jen pokud není prázdný
+    if (nrow(sheet_data) > 0) {
+      # Vynechej prázdné sloupce (všechny NA)
+      sheet_data <- sheet_data |>
+        select(where(~!all(is.na(.x))))
+
+      addWorksheet(wb, sheetName = sheet_config$sheet_name)
+      writeData(wb, sheet_config$sheet_name, sheet_data)
+      created_summary_sheets[[sheet_config$sheet_name]] <- list(
+        n_rows = nrow(sheet_data),
+        n_cols = ncol(sheet_data)
+      )
+    }
+  }
+
+  # --- Formátování ---
+  header_style <- createStyle(textDecoration = "bold")
+  wrap_style <- createStyle(wrapText = TRUE, valign = "top")
+
+  # Overview formátování
+  n_cols <- ncol(overview_data)
+  if (n_cols > 0) {
+    addStyle(wb, "Overview", header_style, rows = 1, cols = 1:n_cols, gridExpand = FALSE)
+    addFilter(wb, "Overview", row = 1, cols = 1:n_cols)
+  }
+  setColWidths(wb, "Overview", cols = 1, widths = 15)
+  setColWidths(wb, "Overview", cols = 2, widths = 30)
+  setColWidths(wb, "Overview", cols = 3, widths = 40)
+
+  # Summary listy formátování (jen pro vytvořené listy)
+  for (sheet_name in names(created_summary_sheets)) {
+    n_rows <- created_summary_sheets[[sheet_name]]$n_rows
+    n_cols <- created_summary_sheets[[sheet_name]]$n_cols
+
+    if (n_cols > 0 && n_rows > 0) {
+      addStyle(wb, sheet_name, header_style, rows = 1, cols = 1:n_cols, gridExpand = FALSE)
+      addFilter(wb, sheet_name, row = 1, cols = 1:n_cols)
+
+      if (n_rows > 1) {
+        addStyle(wb, sheet_name, wrap_style, rows = 2:(n_rows + 1), cols = 1:n_cols,
+                 gridExpand = TRUE)
+      }
+    }
+    setColWidths(wb, sheet_name, cols = 1:3, widths = c(12, 20, 15))
+  }
+
+  saveWorkbook(wb, path_out, overwrite = TRUE)
+}
+
+
 validace_pam <- function(
     data,
     labels_clean       = NULL,
@@ -960,7 +1468,9 @@ validace_pam <- function(
     max_rok            = as.integer(format(Sys.Date(), "%Y")) - 1L,
     verbose            = TRUE,
     vykaz              = NULL,
-    oddil              = NULL
+    oddil              = NULL,
+    compare_data       = FALSE,   # T/F: srovnat tento report s kontrolní várkou
+    path_control       = NULL     # složka s kontrolními (staršími) xlsx reporty
 ) {
 
   log <- function(...) if (verbose) message(...)
@@ -1051,16 +1561,16 @@ validace_pam <- function(
   log("  Příklady sestaveny: ", nrow(examples), " záznamů.")
 
   top_outlier_facilities <- if (facility_id %in% names(data) &&
-                                "outlier_limit" %in% names(summary_table)) {
+                                "outlier_limit_upper" %in% names(summary_table)) {
     r_cols_all <- names(data)[str_detect(names(data), r_pattern)]
     data |>
       select(all_of(facility_id), all_of(r_cols_all)) |>
       pivot_longer(cols = all_of(r_cols_all),
                    names_to = "polozka_index", values_to = "v") |>
       mutate(v_num = suppressWarnings(as.numeric(v))) |>
-      left_join(summary_table |> select(polozka_index, outlier_limit),
+      left_join(summary_table |> select(polozka_index, outlier_limit_upper),
                 by = "polozka_index") |>
-      filter(!is.na(outlier_limit), !is.na(v_num), v_num > outlier_limit) |>
+      filter(!is.na(outlier_limit_upper), !is.na(v_num), v_num > outlier_limit_upper) |>
       count(.data[[facility_id]], name = "n_outl") |>
       arrange(desc(n_outl)) |>
       filter(n_outl >= 5) |>
@@ -1090,6 +1600,32 @@ validace_pam <- function(
   if (!is.null(path_out)) {
     log("\n── Krok 7: Export do .xlsx ──────────────────────────────────────")
     write_pam_validation_xlsx(report, path_out)
+  }
+
+  # ── Krok 8: Srovnání s kontrolní várkou (volitelné) ───────────────────────
+  if (compare_data) {
+    if (is.null(path_out)) {
+      log("  ⚠ Srovnání vyžaduje uložený report (path_out). Přeskočeno.")
+    } else if (is.null(path_control) || !dir.exists(path_control)) {
+      log("  ⚠ path_control nezadán / neexistuje. Srovnání přeskočeno.")
+    } else {
+      # kontrolní report = stejný název bez koncovky _YYMMDD (jiné datum várky)
+      stem <- sub("_\\d{6}\\.xlsx$", "", basename(path_out))
+      kandidati <- list.files(path_control,
+                              pattern = paste0("^", stem, ".*\\.xlsx$"),
+                              full.names = TRUE, recursive = TRUE)
+      kandidati <- setdiff(normalizePath(kandidati), normalizePath(path_out))  # ne sám sebe
+      if (length(kandidati) == 0) {
+        log("  ⚠ Kontrolní report pro '", stem, "' nenalezen v path_control. Srovnání přeskočeno.")
+      } else {
+        control_file <- kandidati[which.max(file.info(kandidati)$mtime)]  # nejnovější odpovídající
+        log("\n── Krok 8: Srovnání s kontrolním reportem ───────────────────────")
+        log("  Kontrolní report: ", basename(control_file))
+        report$compare <- porovnej_pam_reporty(control_file, path_out)
+        log("  Neshody → overview: ", nrow(report$compare$overview_compare),
+            " | summary: ", nrow(report$compare$summary_compare))
+      }
+    }
   }
 
   log("\n✓ Validace dokončena.\n")
