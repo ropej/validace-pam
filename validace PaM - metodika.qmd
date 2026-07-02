@@ -64,12 +64,12 @@ Validace pracuje se třemi typy výkazů, každý s odlišnou strukturou:
 +--------------+----------------------------+------------------------+-------------------------------------+
 | Výkaz        | Vzor r-proměnných          | Identifikátor zařízení | Vstupní soubor(y)                   |
 +==============+============================+========================+=====================================+
-| **P1-04**    | `r102`–`r391`              | `red_izo`              | jeden `.parquet`                    |
+| **P1-04**    | `r102`–`r391`              | `ico` nebo `red_izo`   | jeden `.parquet`                    |
 +--------------+----------------------------+------------------------+-------------------------------------+
 | **P1a**      | `r010102`–`r051305`,\      | `rid`                  | jeden `.parquet`                    |
 |              | `r5s0802`–`r5s1305`        |                        |                                     |
 +--------------+----------------------------+------------------------+-------------------------------------+
-| **P1c**      | `r01`–`r14`, `r601`–`r612` | `red_izo`              | více `.parquet` souborů dle oddílů\ |
+| **P1c**      | `r01`–`r14`, `r601`–`r612` | `ico` nebo `red_izo`   | více `.parquet` souborů dle oddílů\ |
 |              |                            |                        | (IV, IVa, IVb, …, VIII)             |
 +--------------+----------------------------+------------------------+-------------------------------------+
 
@@ -89,7 +89,7 @@ Výkaz se středně velkým počtem proměnných s převážně čtvrtletní fre
 
 ### P1a
 
-Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Chybí sloupec `druh_pam`. Identifikátor zařízení je `rid`, případně `ico` (nikoliv `red_izo` jako u ostatních výkazů). U ročních proměnných se statistiky počítají také z mezikvartálních diferencí.
+Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Chybí sloupec `druh_pam`. Identifikátor zařízení je `rid`, případně `ico` (nikoliv `red_izo` jako možnost u ostatních výkazů). U ročních proměnných se statistiky počítají také z mezikvartálních diferencí.
 
 ### P1c
 
@@ -136,7 +136,7 @@ Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekcem
 +---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
 | **Metriky**                     | Tabulka klíčových ukazatelů:                                                                                                                                                                                                      |        |
 |                                 |                                                                                                                                                                                                                                   |        |
-|                                 | -   *Identifikátor zařízení* – sloupec použitý jako identifikátor (`red_izo`, `rid`, …).                                                                                                                                          |        |
+|                                 | -   *Identifikátor zařízení* – sloupec použitý jako identifikátor (`ico`, `red_izo`, `rid`, …).                                                                                                                                   |        |
 |                                 | -   *Počet let* – počet unikátních let v datech.                                                                                                                                                                                  |        |
 |                                 | -   *Počet řádků* – celkový počet řádků v datasetu.                                                                                                                                                                               |        |
 |                                 | -   *Výskyt závažných chyb* – počet proměnných se závažnými chybami ze všech proměnných, a celkový počet \| chyb. Formát: `5 / 16 (3 chyby)` = 5 proměnných z 16 má 3 závažné chyby. Zobrazí se jen pokud \> 0.                   |        |
@@ -196,23 +196,25 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 
 Frekvence se detekuje automaticky z dat jako modus počtu měřených měsíců za rok (v případě nejednoznačného modu medián):
 
-+-------------------------------+------------------------------+
-| Modus měsíců                  | Frekvence                    |
-+===============================+==============================+
-| 12                            | měsíční                      |
-+-------------------------------+------------------------------+
-| 6                             | pololetní                    |
-+-------------------------------+------------------------------+
-| 4                             | čtvrtletní                   |
-+-------------------------------+------------------------------+
-| 1                             | roční                        |
-+-------------------------------+------------------------------+
-| ostatní                       | nepravidelná                 |
-+-------------------------------+------------------------------+
-| `NA`                          | neměřeno                     |
-+-------------------------------+------------------------------+
++------------------------------+-----------------------------+
+| Modus měsíců                 | Frekvence                   |
++==============================+=============================+
+| 12                           | měsíční                     |
++------------------------------+-----------------------------+
+| 6                            | pololetní                   |
++------------------------------+-----------------------------+
+| 4                            | čtvrtletní                  |
++------------------------------+-----------------------------+
+| 1                            | roční                       |
++------------------------------+-----------------------------+
+| ostatní                      | nepravidelná                |
++------------------------------+-----------------------------+
+| `NA`                         | neměřeno                    |
++------------------------------+-----------------------------+
 
 Je připuštěna možnost, aby se roční proměnné v různých výkazech mohly vykazovat v různých měsících (nejenom v září, ale např. i v červnu nebo v prosinci). Validace nezpevňuje prosinec jako jediný přípustný měsíc měření. Místo toho z dat zjistí, ve kterém měsíci daná proměnná nejčastěji vykazuje hodnoty (modus přes všechna léta), a ten pak použije jako referenční při kontrole pokrytí – tj. ověří, zda je tento měsíc přítomen v každém roce.
+
+Zároveň ještě před samotnou validací probíhá detekce cyklických nul. Kontroluje se, zda některý měsíc napříč všemi roky obsahuje pouze nulové hodnoty. V takovém případě se předpokládá, že se daná proměnná v tomto měsíci reálně neměří a do dat se pouze technicky přepisují nuly. Tyto cyklické nuly jsou proto funkcí `clean_cyclic_zeros()` převedeny na `NA`, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky.
 
 ### Statistiky z diferencí vs. raw hodnot
 
@@ -290,47 +292,59 @@ Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje v
 
 ## Vstupní parametry
 
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Argument             | Výchozí                                                           | Popis                                                                                                                 |
-+======================+===================================================================+=======================================================================================================================+
-| `data`               | –                                                                 | Datový rámec s r-proměnnými a ID sloupci.                                                                             |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `labels_clean`       | `NULL`                                                            | Tabulka labelů z `prep_pam_labels()`.                                                                                 |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `path_out`           | `NULL`                                                            | Cesta k výstupnímu `.xlsx` souboru. Pokud `NULL`, report se nezapisuje.                                               |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `id_cols`            | `c("rok", "mes", "red_izo", "hosp_druh", "plat_rad", "druh_pam")` | Vektor názvů identifikátorových sloupců (`rok`, `mes`, `hosp_druh`, …).                                               |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `facility_id`        | `"red_izo"`                                                       | jednoznačného identifikátor zařízení. Pro P1a: `"rid"`, jinak: `"red_izo"`).                                          |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `r_pattern`          | `"^r\\d{3}$"`                                                     | Regex vzor pro výběr r-proměnných. Pro P1a a P1c: `"^r\\d{1}"`, pro P1-04 `"^r\\d{3}$"`                               |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `max_rok`            | aktuální rok − 1                                                  | Horní limit roku zahrnutého do analýzy. Data s rokem $>$ `max_rok` jsou vyřazena.                                     |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `vykaz`              | `NULL`                                                            | Označení výkazu pro filtraci labelů (`"p1"`, `"1a"`, `"1c"`).                                                         |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `oddil`              | `NULL`                                                            | Označení oddílu P1c v římské číslici (např. `"IV"`, `"VIII"`). Použito pro správné párování labelů.                   |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `outlier_multiplier` | `3`                                                               | Násobitel IQR pro výpočet prahu odlehlých hodnot ($> Q_3 + 3 \times IQR$, $< Q_1 - 3 \times IQR$).                    |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `verbose`            | `TRUE`                                                            | Pokud `TRUE`, vypisuje průběh zpracování do konzole.                                                                  |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `compare_data`       | `FALSE`                                                           | Pokud `TRUE`, výstupní report se po zápisu porovná s kontrolní (starší) várkou. Vyžaduje `path_out` i `path_control`. |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `path_control`       | `NULL`                                                            | Složka s kontrolními `.xlsx` reporty, vůči kterým se nová várka porovnává.                                            |
-+----------------------+-------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| Argument             | Výchozí                                                | Popis                                                                                                                 |
++======================+========================================================+=======================================================================================================================+
+| `data`               | –                                                      | Datový rámec s r-proměnnými a ID sloupci.                                                                             |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `labels_clean`       | `NULL`                                                 | Tabulka labelů z `prep_pam_labels()`.                                                                                 |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `path_out`           | `NULL`                                                 | Cesta k výstupnímu `.xlsx` souboru. Pokud `NULL`, report se nezapisuje.                                               |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `id_cols`            | `c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam")` | Vektor názvů identifikátorových sloupců (`rok`, `mes`, `hosp_druh`, …).                                               |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `facility_id`        | `"ico"`                                                | jednoznačného identifikátor zařízení. Pro P1a: `"rid"`, jinak: `"ico"`, případně `"red_izo"`).                        |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `r_pattern`          | `"^r\\d{3}$"`                                          | Regex vzor pro výběr r-proměnných. Pro P1a a P1c: `"^r\\d{1}"`, pro P1-04 `"^r\\d{3}$"`                               |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `max_rok`            | aktuální rok − 1                                       | Horní limit roku zahrnutého do analýzy. Data s rokem $>$ `max_rok` jsou vyřazena.                                     |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `vykaz`              | `NULL`                                                 | Označení výkazu pro filtraci labelů (`"p1"`, `"1a"`, `"1c"`).                                                         |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `oddil`              | `NULL`                                                 | Označení oddílu P1c v římské číslici (např. `"IV"`, `"VIII"`). Použito pro správné párování labelů.                   |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `clean_zeros`        | `TRUE`                                                 | Pokud `TRUE`, spustí se detekce a konverze cyklických nul (měsíce 100% nula) na NA před samotnou validací.            |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `outlier_multiplier` | `3`                                                    | Násobitel IQR pro výpočet prahu odlehlých hodnot ($> Q_3 + 3 \times IQR$, $< Q_1 - 3 \times IQR$).                    |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `verbose`            | `TRUE`                                                 | Pokud `TRUE`, vypisuje průběh zpracování do konzole.                                                                  |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `compare_data`       | `FALSE`                                                | Pokud `TRUE`, výstupní report se po zápisu porovná s kontrolní (starší) várkou. Vyžaduje `path_out` i `path_control`. |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| `path_control`       | `NULL`                                                 | Složka s kontrolními `.xlsx` reporty, vůči kterým se nová várka porovnává.                                            |
++----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 
 ## Kroky zpracování
 
-1.  **Příprava dat** – sjednocení formátu měsíce na dvě cifry (např. `6` → `"06"`), filtr na `max_rok`, kontrola přítomnosti r-proměnných.
-2.  **Kontrola struktury** – počty řádků, sloupců, duplicitní kombinace klíčových sloupců.
-3.  **Detekce frekvence měření** – modus měřených měsíců za rok → klasifikace proměnných.
-4.  **Kontrola pokrytí měsíců** – pro každý rok: jsou přítomny očekávané měsíce?
-5.  **Statistiky proměnných** – `NA` ratio, zeros ratio, min/max, outlier ratio, počet unikátních hodnot (z diferencí nebo raw dle frekvence).
-6.  **Strange behaviour** – flagy závažnosti a měkkých varování.
-7.  **Příklady problémů** – konkrétní záznamy s negativními, neceločíselnými a odlehlými hodnotami.
-8.  **Export** – zápis do `.xlsx` se čtyřmi listy.
-9.  **Srovnání s kontrolní várkou** (volitelné, jen při `compare_data = TRUE`) – nový report se porovná se starší várkou a do výstupu se přidá prvek `$compare` (viz [Srovnání dvou várek validací](#sec-srovnani-varek)).
+1.  **Čištění cyklických nul** (volitelné, `clean_zeros = TRUE`) – detekuje měsíce, které jsou u dané proměnné **všude nulové** (100% nul) a předpokládá, že se v takovém měsíci měřit neměří. Tyto nuly se funkční `clean_cyclic_zeros()` převádějí na `NA`, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky.
+
+2.  **Příprava dat** – sjednocení formátu měsíce na dvě cifry (např. `6` → `"06"`), filtr na `max_rok`, kontrola přítomnosti r-proměnných.
+
+3.  **Kontrola struktury** – počty řádků, sloupců, duplicitní kombinace klíčových sloupců.
+
+4.  **Detekce frekvence měření** – modus měřených měsíců za rok → klasifikace proměnných.
+
+5.  **Kontrola pokrytí měsíců** – pro každý rok: jsou přítomny očekávané měsíce?
+
+6.  **Statistiky proměnných** – `NA` ratio, zeros ratio, min/max, outlier ratio, počet unikátních hodnot (z diferencí nebo raw dle frekvence).
+
+7.  **Strange behaviour** – flagy závažnosti a měkkých varování.
+
+8.  **Příklady problémů** – konkrétní záznamy s negativními, neceločíselnými a odlehlými hodnotami.
+
+9.  **Export** – zápis do `.xlsx` se čtyřmi listy.
+
+10. **Srovnání s kontrolní várkou** (volitelné, jen při `compare_data = TRUE`) – nový report se porovná se starší várkou a do výstupu se přidá prvek `$compare` (viz [Srovnání dvou várek validací](#sec-srovnani-varek)).
 
 ## Příklad použití – jednotlivé výkazy
 
@@ -342,7 +356,7 @@ report_pam <- validace_pam(
   labels_clean = labels_clean,
   path_out     = "Výkazy-validace/260604/p1_04_validace_260604.xlsx",
   id_cols      = intersect(id_cols, names(pam_1_04)),
-  facility_id  = "red_izo",
+  facility_id  = "ico",
   r_pattern    = "^r\\d{3}$",      # výchozí
   vykaz        = "p1",
   max_rok      = 2024
@@ -375,10 +389,10 @@ iwalk(pam_p1c_all, function(d, oddil) {
     labels_clean = labels_clean,
     path_out     = paste0("Výkazy-validace/260604/p1c_", oddil, "_validace_260604.xlsx"),
     id_cols      = intersect(id_cols, names(d)),
-    facility_id  = "red_izo",
-    r_pattern    = "^r\\d{1}",       # !
+    facility_id  = "ico",
+    r_pattern    = "^r\\d{1}",
     vykaz        = "1c",
-    oddil        = oddil,            # !
+    oddil        = oddil,
     max_rok      = 2024
   )
 })
@@ -386,19 +400,19 @@ iwalk(pam_p1c_all, function(d, oddil) {
 
 ## Shrnutí argumentů dle výkazu {#sec-argumenty-validace-pam}
 
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
-| Argument      | P1-04                                   | P1a                           | P1c                   |
-+===============+=========================================+===============================+=======================+
-| `facility_id` | `"red_izo"`                             | `"rid"`                       | `"red_izo"`           |
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
-| `r_pattern`   | `"^r\\d{3}$"`                           | `"^r\\d{1}"`                  | `"^r\\d{1}"`          |
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
-| `vykaz`       | `"p1"`                                  | `"1a"`                        | `"1c"`                |
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
-| `oddil`       | –                                       | –                             | `"IV"`, `"VIII"`, ... |
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
-| ID sloupce    | rok, mes, hosp_druh, plat_rad, druh_pam | rok, mes, hosp_druh, plat_rad | rok, druh             |
-+---------------+-----------------------------------------+-------------------------------+-----------------------+
++---------------+-----------------------------------------+-------------------------------+--------------------------+
+| Argument      | P1-04                                   | P1a                           | P1c                      |
++===============+=========================================+===============================+==========================+
+| `facility_id` | `"ico"` nebo `"red_izo"`                | `"rid"`                       | `"ico"` nebo `"red_izo"` |
++---------------+-----------------------------------------+-------------------------------+--------------------------+
+| `r_pattern`   | `"^r\\d{3}$"`                           | `"^r\\d{1}"`                  | `"^r\\d{1}"`             |
++---------------+-----------------------------------------+-------------------------------+--------------------------+
+| `vykaz`       | `"p1"`                                  | `"1a"`                        | `"1c"`                   |
++---------------+-----------------------------------------+-------------------------------+--------------------------+
+| `oddil`       | –                                       | –                             | `"IV"`, `"VIII"`, ...    |
++---------------+-----------------------------------------+-------------------------------+--------------------------+
+| ID sloupce    | rok, mes, hosp_druh, plat_rad, druh_pam | rok, mes, hosp_druh, plat_rad | rok, druh                |
++---------------+-----------------------------------------+-------------------------------+--------------------------+
 
 ## Výstup funkce
 
@@ -613,7 +627,7 @@ PaM validace (`validace_PAM.R`) a validace datového modelu školy [EduData](htt
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
 | **Typy dat**                 | statické i dynamické výkazy                            | pouze PaM výkazy                                                                                                                     |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
-| **Identifikátor zařízení**   | `red_izo`, `p_izo` , `izo` dle zvolené agregace výkazu | `red_izo` / `rid` dle výkazu                                                                                                         |
+| **Identifikátor zařízení**   | `red_izo`, `p_izo` , `izo` dle zvolené agregace výkazu | `izo / red_izo` / `rid` dle výkazu                                                                                                   |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
 | **Labely**                   | nejnovější soubor ze složky labelů (automaticky)       | fixní `pamvykpol_labels.xlsx`                                                                                                        |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
