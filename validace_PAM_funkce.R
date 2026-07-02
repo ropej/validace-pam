@@ -946,33 +946,72 @@ write_pam_validation_xlsx <- function(report, path_out) {
   id_cols_str <- if (!is.null(report$overview$id_cols_without_time) && length(report$overview$id_cols_without_time) > 0)
     paste(report$overview$id_cols_without_time, collapse = ", ") else ""
 
-  kv <- tibble(
-    label = c("Identifikátor zařízení",
+  # Reorganizace do sekcí
+  labels <- character()
+  values <- character()
+  section_rows <- integer()  # Řádky, které jsou sekce (pro formátování)
+
+  # --- Základní info (bez sekce) ---
+  labels <- c(labels, "Počet let", "Počet řádků")
+  values <- c(values, as.character(max_years), as.character(report$overview$n_rows))
+
+  # --- IDENTIFIKÁTORY ---
+  section_rows <- c(section_rows, length(labels) + 1L)
+  labels <- c(labels, "**Identifikátory**")
+  values <- c(values, "")
+
+  labels <- c(labels, "Identifikátor zařízení",
               "Identifikátory jedinečných řádků",
-              "Počet let", "Počet řádků",
-              if (report$overview$n_rows_with_na_mes > 0) "Počet řádků s mes=NA" else "",
-              kv_extra_labels,
-              "Počet záporných proměnných", paste0("Počet chybějících ", report$facility_id),
-              secondary_labels,
-              "Počet prázdných labelů",
-              "Existence cyklických nul",
-              "Existence nekonzistentního měření",
-              "Existence duplicit", "Počet duplicit"),
-    value = c(if (!is.null(report$facility_id)) report$facility_id else "",
+              paste0("Počet chybějících ", report$facility_id))
+  values <- c(values, if (!is.null(report$facility_id)) report$facility_id else "",
               id_cols_str,
-              as.character(max_years), as.character(report$overview$n_rows),
-              if (report$overview$n_rows_with_na_mes > 0) as.character(report$overview$n_rows_with_na_mes) else "",
-              kv_extra_values,
-              as.character(n_neg),
-              if (!is.na(n_empty_fac)) sprintf("%d (%.1f %%)", n_empty_fac, round(n_empty_fac / report$overview$n_rows * 100, 2)) else "",
-              secondary_values,
-              as.character(n_empty_lbl),
-              as.character(cyclic_zeros_detected),
-              as.character(exist_inkonz),
+              if (!is.na(n_empty_fac)) sprintf("%d (%.1f %%)", n_empty_fac, round(n_empty_fac / report$overview$n_rows * 100, 2)) else "")
+
+  # Secondary facility IDs
+  if (length(secondary_labels) > 0) {
+    labels <- c(labels, secondary_labels)
+    values <- c(values, secondary_values)
+  }
+
+  # --- KONTROLA ANOMÁLIÍ ---
+  section_rows <- c(section_rows, length(labels) + 1L)
+  labels <- c(labels, "**Kontrola anomálií**")
+  values <- c(values, "")
+
+  # Výskyt závažných chyb a zvláštního chování
+  labels <- c(labels, kv_extra_labels)
+  values <- c(values, kv_extra_values)
+
+  # Počet řádků s mes=NA
+  if (report$overview$n_rows_with_na_mes > 0) {
+    labels <- c(labels, "Počet řádků s mes=NA")
+    values <- c(values, as.character(report$overview$n_rows_with_na_mes))
+  }
+
+  # Ostatní anomálie
+  labels <- c(labels, "Počet záporných proměnných", "Počet prázdných labelů",
+              "Existence cyklických nul", "Existence nekonzistentního měření",
+              "Existence duplicit", "Počet duplicit")
+  values <- c(values, as.character(n_neg), as.character(n_empty_lbl),
+              as.character(cyclic_zeros_detected), as.character(exist_inkonz),
               as.character(report$overview$existence_of_duplicates),
               as.character(report$overview$n_duplicate_keys))
-  )
+
+  kv <- tibble(label = labels, value = values)
   writeData(wb, "Report overview", kv, startRow = r, colNames = FALSE)
+
+  # Formátování sekcí (bold) a odstranění **
+  for (i in seq_along(section_rows)) {
+    sect_row <- r - 1 + section_rows[i]
+    label_cell <- paste0("A", sect_row)
+    # Odstraň ** z labelu
+    kv$label[section_rows[i]] <- str_remove_all(kv$label[section_rows[i]], "\\*\\*")
+    # Aktualizuj Excel
+    writeData(wb, "Report overview", kv$label[section_rows[i]], xy = c(1, sect_row), colNames = FALSE)
+    # Aplikuj bold
+    addStyle(wb, "Report overview", createStyle(textDecoration = "bold"), rows = sect_row, cols = 1:2)
+  }
+
   r <- r + nrow(kv) + 1L
 
   # Příklady duplicit
