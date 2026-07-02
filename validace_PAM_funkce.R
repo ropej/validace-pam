@@ -374,15 +374,19 @@ summarise_pam_variables <- function(data, id_cols,
 
   # --- diff-based statistiky (jen pro sub-roční frekvence) ---
   diff_static_cols <- intersect(c("hosp_druh", "plat_rad", "druh_pam"), names(data))
+  if (facility_id %in% names(data)) {
+    diff_static_cols <- c(facility_id, diff_static_cols)
+  }
   sort_by_mes      <- "mes" %in% names(data)
 
-  vars_for_diff <- if ("frekvence_mereni" %in% names(summary_table))
+  vars_for_diff <- if ("frekvence_mereni" %in% names(summary_table)) {
     summary_table |>
       filter(!is.na(frekvence_mereni),
              !frekvence_mereni %in% c("roční", "nepravidelná")) |>
       pull(polozka_index)
-  else
+  }  else {
     character(0)
+    }
 
   # Skupiny jsou bez roku → přelom roku (prosinec→leden) je platná diference,
   # NA dostane jen první hodnota celé časové řady dané skupiny.
