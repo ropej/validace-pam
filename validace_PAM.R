@@ -191,8 +191,8 @@ report_pam_1a <- validace_pam(
 # SPUŠTĚNÍ VALIDACE P1c
 # ==============================================================================
 
-iwalk(pam_p1c_all, function(d, oddil) {
-  if (oddil == "0") return(invisible(NULL))
+report_pam_p1c_all <- imap(pam_p1c_all, function(d, oddil) {
+  if (oddil == "0") return(NULL)
 
   path_out_f <- file.path(
     path_out_dir,
