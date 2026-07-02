@@ -949,15 +949,15 @@ write_pam_validation_xlsx <- function(report, path_out) {
   # Reorganizace do sekcí
   labels <- character()
   values <- character()
-  section_rows <- integer()  # Řádky, které jsou sekce (pro formátování)
+  section_indices <- integer()  # Indexy řádků, které jsou sekce (pro formátování)
 
   # --- Základní info (bez sekce) ---
   labels <- c(labels, "Počet let", "Počet řádků")
   values <- c(values, as.character(max_years), as.character(report$overview$n_rows))
 
   # --- IDENTIFIKÁTORY ---
-  section_rows <- c(section_rows, length(labels) + 1L)
-  labels <- c(labels, "**Identifikátory**")
+  section_indices <- c(section_indices, length(labels) + 1L)
+  labels <- c(labels, "Identifikátory")
   values <- c(values, "")
 
   labels <- c(labels, "Identifikátor zařízení",
@@ -974,8 +974,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
   }
 
   # --- KONTROLA ANOMÁLIÍ ---
-  section_rows <- c(section_rows, length(labels) + 1L)
-  labels <- c(labels, "**Kontrola anomálií**")
+  section_indices <- c(section_indices, length(labels) + 1L)
+  labels <- c(labels, "Kontrola anomálií")
   values <- c(values, "")
 
   # Výskyt závažných chyb a zvláštního chování
@@ -1000,16 +1000,10 @@ write_pam_validation_xlsx <- function(report, path_out) {
   kv <- tibble(label = labels, value = values)
   writeData(wb, "Report overview", kv, startRow = r, colNames = FALSE)
 
-  # Formátování sekcí (bold) a odstranění **
-  for (i in seq_along(section_rows)) {
-    sect_row <- r - 1 + section_rows[i]
-    label_cell <- paste0("A", sect_row)
-    # Odstraň ** z labelu
-    kv$label[section_rows[i]] <- str_remove_all(kv$label[section_rows[i]], "\\*\\*")
-    # Aktualizuj Excel
-    writeData(wb, "Report overview", kv$label[section_rows[i]], xy = c(1, sect_row), colNames = FALSE)
-    # Aplikuj bold
-    addStyle(wb, "Report overview", createStyle(textDecoration = "bold"), rows = sect_row, cols = 1:2)
+  # Formátování sekcí (bold)
+  for (idx in section_indices) {
+    sect_abs_row <- r - 1 + idx
+    addStyle(wb, "Report overview", createStyle(textDecoration = "bold"), rows = sect_abs_row, cols = 1:2)
   }
 
   r <- r + nrow(kv) + 1L
