@@ -946,7 +946,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               "Počet let", "Počet řádků",
               if (report$overview$n_rows_with_na_mes > 0) "Počet řádků s mes=NA" else "",
               kv_extra_labels,
-              "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
+              "Počet záporných proměnných", paste0("Počet chybějících ", report$facility_id),
               secondary_labels,
               "Počet prázdných labelů",
               "Existence cyklických nul",
