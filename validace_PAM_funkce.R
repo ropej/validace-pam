@@ -3,6 +3,7 @@
 # Pomocné funkce pro validaci PAM výkazů (P1-04)
 #
 # Struktura:
+#   0. clean_cyclic_zeros()        – čištění cyklicky se vyskytujících nul
 #   1. is_integer_tol()            – kontrola celočíselnosti
 #   2. upper_outlier_limit()       – horní mez outlierů (IQR)
 #   3. modus_or_median()           – modus s mediánem při nerozhodnosti
@@ -17,6 +18,64 @@
 #  12. validace_pam()         – hlavní orchestrační funkce
 # ==============================================================================
 
+# ------------------------------------------------------------------------------
+# 0. clean_cyclic_zeros()
+# Převede nuly na NA v měsících, které jsou VŠUDE (100%) nula
+# pro danou r-proměnnou (měsíc je "neměřen")
+# ------------------------------------------------------------------------------
+
+clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$") {
+
+  r_cols <- names(data)[str_detect(names(data), r_pattern)]
+
+  if (length(r_cols) == 0) {
+    return(list(data = data, report = NULL))
+  }
+
+  # Pro každou r-proměnnou a měsíc: zkontroluj, zda jsou VŠECHNY hodnoty nula
+  zero_months <- map_dfr(r_cols, function(var) {
+    vals <- suppressWarnings(as.numeric(data[[var]]))
+
+    data |>
+      mutate(!!var := vals) |>
+      group_by(mes) |>
+      summarise(
+        all_zero = all(is.na(!!sym(var)) | !!sym(var) == 0),
+        n_values = sum(!is.na(!!sym(var))),
+        .groups = "drop"
+      ) |>
+      filter(all_zero, n_values > 0) |>
+      mutate(proměnná = var)
+  })
+
+  if (nrow(zero_months) == 0) {
+    return(list(data = data, report = tibble(proměnná = character(), měsíc = character())))
+  }
+
+  # Převeď nuly na NA pro identifikované měsíce
+  data_clean <- data |>
+    mutate(across(all_of(r_cols), ~ {
+      v <- suppressWarnings(as.numeric(.))
+      ifelse(is.na(v), NA, v)
+    }))
+
+  for (i in seq_len(nrow(zero_months))) {
+    var <- zero_months$proměnná[i]
+    month <- zero_months$mes[i]
+
+    mask <- data_clean$mes == month
+    v <- suppressWarnings(as.numeric(data_clean[[var]]))
+    v[mask & v == 0] <- NA
+    data_clean[[var]] <- v
+  }
+
+  report <- zero_months |>
+    select(proměnná, měsíc = mes) |>
+    arrange(proměnná, měsíc) |>
+    mutate(měsíc = as.character(měsíc))
+
+  list(data = data_clean, report = report)
+}
 
 # ------------------------------------------------------------------------------
 # 1. is_integer_tol()
