@@ -1693,6 +1693,7 @@ validace_pam <- function(
   }
 
   log("\n── Krok 4: Výpočet souhrnných statistik ────────────────────────")
+  log("[DEBUG] facility_id: class=", class(facility_id), " length=", length(facility_id), " value='", paste(facility_id, collapse=","), "'")
   summary_table <- summarise_pam_variables(
     data               = data,
     id_cols            = id_cols,
