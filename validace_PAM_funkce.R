@@ -934,25 +934,20 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
 
-  na_mes_label <- if (report$overview$n_rows_with_na_mes > 0)
-    "Počet řádků s mes=NA" else character(0)
-  na_mes_value <- if (report$overview$n_rows_with_na_mes > 0)
-    as.character(report$overview$n_rows_with_na_mes) else character(0)
-
   kv <- tibble(
     label = c("Identifikátor zařízení",
               "Počet let", "Počet řádků",
-              na_mes_label,
+              if (report$overview$n_rows_with_na_mes > 0) "Počet řádků s mes=NA" else "",
               kv_extra_labels,
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
-              if (!is.na(secondary_label)) secondary_label else character(0),
+              if (!is.na(secondary_label)) secondary_label else "",
               "Počet prázdných labelů",
               "Existence cyklických nul",
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
     value = c(if (!is.null(report$facility_id)) report$facility_id else "",
               as.character(max_years), as.character(report$overview$n_rows),
-              na_mes_value,
+              if (report$overview$n_rows_with_na_mes > 0) as.character(report$overview$n_rows_with_na_mes) else "",
               kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
               if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else character(0),
