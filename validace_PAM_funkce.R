@@ -982,13 +982,23 @@ write_pam_validation_xlsx <- function(report, path_out) {
     tibble(polozka_index = character())
   }
 
+  # Přidat merene_mesice z coverage (distinct)
+  merene_mesice_col <- if (!is.null(report$coverage) && nrow(report$coverage) > 0) {
+    report$coverage |>
+      select(polozka_index, merene_mesice) |>
+      distinct(polozka_index, .keep_all = TRUE)
+  } else {
+    tibble(polozka_index = character())
+  }
+
   summary_out <- report$summary |>
     select(-any_of(c("count_notintegers", "outlier_limit_upper", "outlier_limit_lower",
                      "mereni_ok_ratio", "roky_s_merenims"))) |>
     left_join(coverage_wide_cols, by = "polozka_index") |>
+    left_join(merene_mesice_col, by = "polozka_index") |>
     select(
       any_of(c("polozka_index", "typ_promenne", "count_years", "count_mes",
-               "frekvence_mereni", "na_ratio", "zeros_ratio",
+               "frekvence_mereni", "merene_mesice", "na_ratio", "zeros_ratio",
                "is_negative",
                "count_uniques_diff", "min_diff", "max_diff", "diffmean_range",
                "outliers_ratio_diff",
@@ -1002,16 +1012,6 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   addWorksheet(wb, sheetName = "Summary")
   writeData(wb, "Summary", summary_out)
-
-  # --- Frequency coverage ---
-  if (!is.null(report$coverage) && nrow(report$coverage) > 0) {
-    frequency_coverage <- report$coverage |>
-      select(polozka_index, frekvence_mereni, merene_mesice, chybejici_mesice) |>
-      distinct()
-
-    addWorksheet(wb, sheetName = "Frequency coverage")
-    writeData(wb, "Frequency coverage", frequency_coverage)
-  }
 
   # --- příprava Strange behaviour ---
   sb <- report$strange_behaviour
@@ -1130,15 +1130,6 @@ write_pam_validation_xlsx <- function(report, path_out) {
         addStyle(wb, sheet, num_style, rows = 2:n_rows, cols = num_cols, gridExpand = TRUE)
     }
 
-    if (sheet == "Frequency coverage" && n_rows > 1) {
-      # polozka_index: zúžit šířku, ostatní: normální
-      idx_col <- which(names(dat) == "polozka_index")
-      if (length(idx_col) > 0)
-        setColWidths(wb, sheet, cols = idx_col, widths = 14.67)
-      other_cols <- setdiff(seq_len(n_cols), idx_col)
-      if (length(other_cols) > 0)
-        setColWidths(wb, sheet, cols = other_cols, widths = col_widths[other_cols])
-    }
   }
 
   saveWorkbook(wb, path_out, overwrite = TRUE)
