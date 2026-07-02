@@ -1699,8 +1699,8 @@ validace_pam <- function(
   overview <- check_pam_structure(data, id_cols = id_cols_full, r_pattern = r_pattern)
   # Přepis n_rows_with_na_mes na hodnotu PŘED filtrací roku
   overview$n_rows_with_na_mes <- n_rows_na_mes_before_filter
-  # Identifikátory bez roku a měsíce (slouží k jednoznačné identifikaci řádku v čase)
-  overview$id_cols_without_time <- setdiff(id_cols_full, c("rok", "mes"))
+  # Identifikátory bez roku, měsíce a facility_id (slouží k jednoznačné identifikaci řádku v čase)
+  overview$id_cols_without_time <- setdiff(id_cols_full, c("rok", "mes", facility_id))
   log("  Řádků: ", overview$n_rows,
       " | r-kových proměnných: ", overview$n_r_variables,
       " | Duplicitní klíče: ", overview$n_duplicate_keys)
