@@ -212,14 +212,14 @@ check_pam_structure <- function(data, id_cols, r_pattern = "^r\\d{3}$") {
 # 6. detect_mereni_frequency()
 # Pro každou r-kovou proměnnou zjistí kategorii frekvence měření.
 #
-# Logika: modus počtu měřených měsíců přes roky → kategorie.
+# Logika: modus počtu měřených měsíců za rok → kategorie.
 #
-# Kategorie:
-#   "měsíční"      … modus == 12
-#   "čtvrtletní"   … modus %in% c(3, 4)
-#   "pololetní"    … modus == 2
-#   "roční"        … modus == 1
-#   "nepravidelná" … jinak
+# Kategorie (na základě modus_mesicu_za_rok):
+#   "měsíční"      … 12 měsíců/rok
+#   "pololetní"    … 6 měsíců/rok
+#   "čtvrtletní"   … 3–4 měsíce/rok
+#   "roční"        … 1 měsíc/rok
+#   "nepravidelná" … jinak (2 měsíce/rok, 5+ měsíců/rok, atd.)
 #
 # OUTPUT: tibble polozka_index | frekvence_mereni | modus_mesicu_za_rok |
 #                              | roky_s_merenims  | ocekavane_mesice
@@ -267,11 +267,11 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
     left_join(mes_modus, by = "polozka_index") |>
     mutate(
       frekvence_mereni = case_when(
-        is.na(modus_mesicu)         ~ "neměřeno",
-        modus_mesicu == 12          ~ "měsíční",
-        modus_mesicu == 6           ~ "pololetní",
-        modus_mesicu == 4           ~ "čtvrtletní",
-        modus_mesicu == 1           ~ "roční",
+        is.na(modus_mesicu_za_rok)  ~ "neměřeno",
+        modus_mesicu_za_rok == 12   ~ "měsíční",
+        modus_mesicu_za_rok == 6    ~ "pololetní",
+        modus_mesicu_za_rok %in% c(3, 4) ~ "čtvrtletní",
+        modus_mesicu_za_rok == 1    ~ "roční",
         TRUE                        ~ "nepravidelná"
       ),
       ocekavane_mesice = pmap(list(frekvence_mereni, mes_modus), function(freq, mm) {
@@ -1558,6 +1558,7 @@ validace_pam <- function(
 
   # --- Čištění cyklických nul (měsíce 100% nula = neměřeny) ---
   cyclic_zeros_detected <- FALSE
+  log("\n[DEBUG] Podmínka cyklických nul: clean_zeros=", clean_zeros, ", 'mes' v datech=", "mes" %in% names(data))
   if (clean_zeros && "mes" %in% names(data)) {
     clean_result <- clean_cyclic_zeros(data, r_pattern = r_pattern)
     data <- clean_result$data
@@ -1567,6 +1568,8 @@ validace_pam <- function(
       log("Konvertovány nuly na NA v měsících (100% nula = neměřeno):")
       print(clean_result$report)
     }
+  } else {
+    log("→ Čištění cyklických nul PŘESKOČENO (P1c bez měsíce)")
   }
 
   missing_cols <- setdiff(c(id_cols, "rok", "mes"), names(data))
