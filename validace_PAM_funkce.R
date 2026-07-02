@@ -363,19 +363,32 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
 
   # Přidat nepravidelné proměnné - převzít merene_mesice z long_all, ale bez kontroly pokrytí
   if (nrow(freq_nepravidelne) > 0) {
-    coverage_nepravidelne <- merene |>
+    nepravidelne_merene <- merene |>
       filter(polozka_index %in% freq_nepravidelne$polozka_index) |>
+      mutate(merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")))
+
+    coverage_nepravidelne <- nepravidelne_merene |>
       left_join(freq_nepravidelne |> select(polozka_index, frekvence_mereni),
                 by = "polozka_index") |>
       mutate(
-        merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")),
         chybejici_mesice = NA_character_,
         mereni_ok = NA
       ) |>
       select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
 
-    bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
+    result <- bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
       arrange(polozka_index, rok)
+
+    # Detekce duplikátů
+    dups <- result |>
+      summarise(n = n(), .by = c(polozka_index, rok)) |>
+      filter(n > 1)
+    if (nrow(dups) > 0) {
+      warning("check_mereni_coverage: nalezeny duplikáty v (polozka_index, rok):\n",
+              paste(capture.output(print(dups)), collapse = "\n"))
+    }
+
+    result
   } else {
     coverage_kontrolovane
   }
