@@ -810,6 +810,20 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- wr_header("Název výkazu", r)
   writeData(wb, "Report overview", tibble(x = vykaz), startRow = r, colNames = FALSE)
   r <- r + 1L
+
+  # Report vytvořen
+  writeData(wb, "Report overview", tibble(x = paste0("Report vytvořen: ", format(Sys.Date(), "%d.%m.%Y"))),
+            startRow = r, colNames = FALSE)
+  r <- r + 1L
+
+  # Existence cyklických nul
+  cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
+  if (cyclic_zeros_detected) {
+    writeData(wb, "Report overview", tibble(x = "Existence cyklických nul: ANO"),
+              startRow = r, colNames = FALSE)
+    r <- r + 1L
+  }
+
   if (!is.null(report$max_rok_filter)) {
     writeData(wb, "Report overview",
               tibble(x = paste0("Filtrováno na roky ≤ ", report$max_rok_filter)),
@@ -1553,10 +1567,12 @@ validace_pam <- function(
   log <- function(...) if (verbose) message(...)
 
   # --- Čištění cyklických nul (měsíce 100% nula = neměřeny) ---
+  cyclic_zeros_detected <- FALSE
   if (clean_zeros && "mes" %in% names(data)) {
     clean_result <- clean_cyclic_zeros(data, r_pattern = r_pattern)
     data <- clean_result$data
     if (!is.null(clean_result$report) && nrow(clean_result$report) > 0) {
+      cyclic_zeros_detected <- TRUE
       log("\n── Čištění cyklických nul ──")
       log("Konvertovány nuly na NA v měsících (100% nula = neměřeno):")
       print(clean_result$report)
@@ -1691,7 +1707,8 @@ validace_pam <- function(
     facility_id            = facility_id,
     n_empty_facility_id    = n_empty_facility_id,
     secondary_facility_id  = secondary_facility_id,
-    n_empty_secondary_facility_id = n_empty_secondary_facility_id
+    n_empty_secondary_facility_id = n_empty_secondary_facility_id,
+    cyclic_zeros_detected  = cyclic_zeros_detected
   )
 
   if (!is.null(path_out)) {
