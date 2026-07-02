@@ -956,6 +956,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
   values <- c(values, as.character(max_years), as.character(report$overview$n_rows))
 
   # --- IDENTIFIKÁTORY ---
+  labels <- c(labels, "")  # prázdný řádek
+  values <- c(values, "")
   section_indices <- c(section_indices, length(labels) + 1L)
   labels <- c(labels, "Identifikátory")
   values <- c(values, "")
@@ -974,6 +976,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
   }
 
   # --- KONTROLA ANOMÁLIÍ ---
+  labels <- c(labels, "")  # prázdný řádek
+  values <- c(values, "")
   section_indices <- c(section_indices, length(labels) + 1L)
   labels <- c(labels, "Kontrola anomálií")
   values <- c(values, "")
