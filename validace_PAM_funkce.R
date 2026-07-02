@@ -352,6 +352,7 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
 
   coverage_kontrolovane <- merene |>
     left_join(freq_info, by = "polozka_index") |>
+    filter(!is.na(frekvence_mereni)) |>
     mutate(
       chybejici_mesice = map2(ocekavane_mesice, merene_mesice, ~ setdiff(.x, .y)),
       mereni_ok = map_lgl(chybejici_mesice, ~ length(.x) == 0),
@@ -376,19 +377,8 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
       ) |>
       select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
 
-    result <- bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
+    bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
       arrange(polozka_index, rok)
-
-    # Detekce duplikátů
-    dups <- result |>
-      summarise(n = n(), .by = c(polozka_index, rok)) |>
-      filter(n > 1)
-    if (nrow(dups) > 0) {
-      warning("check_mereni_coverage: nalezeny duplikáty v (polozka_index, rok):\n",
-              paste(capture.output(print(dups)), collapse = "\n"))
-    }
-
-    result
   } else {
     coverage_kontrolovane
   }
