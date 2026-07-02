@@ -597,7 +597,7 @@ make_pam_examples <- function(data, id_cols, summary_table,
                               coverage_table        = NULL,
                               r_pattern             = "^r\\d{3}$",
                               max_examples_per_type = 100,
-                              facility_id           = "red_izo") {
+                              facility_id           = "ico") {
 
   r_cols        <- names(data)[str_detect(names(data), r_pattern)]
   valid_id_cols <- id_cols[id_cols %in% names(data)]
@@ -632,7 +632,7 @@ make_pam_examples <- function(data, id_cols, summary_table,
     summarise(outliers_per_year = paste(paste0("v roce ", rok, ": ", n_outl), collapse = ", "),
               .groups = "drop")
 
-  # --- outliers_per_facility: red_izo s > 5 outl, jen nejvyšší úroveň ---
+  # --- outliers_per_facility: ico s > 5 outl, jen nejvyšší úroveň ---
   outl_fac_tbl <- if (facility_id %in% names(data)) {
     long_data |>
       filter(!is.na(outlier_limit_upper), !is.na(value_num), value_num > outlier_limit_upper) |>
@@ -705,6 +705,14 @@ write_pam_validation_xlsx <- function(report, path_out) {
     sum(report$summary$is_negative, na.rm = TRUE) else NA_integer_
 
   n_empty_fac <- if (!is.null(report$n_empty_facility_id)) report$n_empty_facility_id else NA_integer_
+
+  # Počet chybějícího secondary facility_id (red_izo/ico)
+  n_empty_secondary_fac <- if (!is.null(report$n_empty_secondary_facility_id)) report$n_empty_secondary_facility_id else NA_integer_
+  secondary_facility_name <- if (!is.null(report$secondary_facility_id)) report$secondary_facility_id else NA_character_
+  secondary_fac_formatted <- if (!is.na(n_empty_secondary_fac) && !is.na(secondary_facility_name)) {
+    pct <- round(n_empty_secondary_fac / report$overview$n_rows * 100, 2)
+    sprintf("%d (%.1f %%)", n_empty_secondary_fac, pct)
+  } else NA_character_
 
   n_empty_lbl <- if (!is.null(report$strange_behaviour) &&
                      "existing_label" %in% names(report$strange_behaviour))
@@ -800,11 +808,15 @@ write_pam_validation_xlsx <- function(report, path_out) {
     }
   }
 
+  secondary_label <- if (!is.na(secondary_facility_name))
+    paste0("Počet chybějících ", secondary_facility_name) else NA_character_
+
   kv <- tibble(
     label = c("Identifikátor zařízení",
               "Počet let", "Počet řádků",
               kv_extra_labels,
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
+              if (!is.na(secondary_label)) secondary_label else character(0),
               "Počet prázdných labelů",
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
@@ -812,6 +824,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               as.character(max_years), as.character(report$overview$n_rows),
               kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
+              if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else character(0),
               as.character(n_empty_lbl),
               as.character(exist_inkonz),
               as.character(report$overview$existence_of_duplicates),
@@ -1459,9 +1472,9 @@ validace_pam <- function(
     data,
     labels_clean       = NULL,
     path_out           = NULL,
-    id_cols            = c("rok", "mes", "red_izo", "hosp_druh", "plat_rad", "druh_pam"),
+    id_cols            = c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam"),
     r_pattern          = "^r\\d{3}$",
-    facility_id        = "red_izo",
+    facility_id        = "ico",
     outlier_multiplier = 3,
     max_na_ratio       = 0.95,
     max_outliers_ratio = 0.01,
@@ -1584,6 +1597,13 @@ validace_pam <- function(
     sum(is.na(fac) | fac == "", na.rm = TRUE)
   } else NA_integer_
 
+  # Počet chybějících "druhého" facility_id (jen pro P1-04 a P1c)
+  secondary_facility_id <- if (facility_id == "red_izo") "ico" else if (facility_id == "ico") "red_izo" else NA_character_
+  n_empty_secondary_facility_id <- if (!is.na(secondary_facility_id) && secondary_facility_id %in% names(data)) {
+    fac_sec <- data[[secondary_facility_id]]
+    sum(is.na(fac_sec) | fac_sec == "", na.rm = TRUE)
+  } else NA_integer_
+
   report <- list(
     overview               = overview,
     freq_table             = freq_table,
@@ -1594,7 +1614,9 @@ validace_pam <- function(
     top_outlier_facilities = top_outlier_facilities,
     max_rok_filter         = effective_max_rok,
     facility_id            = facility_id,
-    n_empty_facility_id    = n_empty_facility_id
+    n_empty_facility_id    = n_empty_facility_id,
+    secondary_facility_id  = secondary_facility_id,
+    n_empty_secondary_facility_id = n_empty_secondary_facility_id
   )
 
   if (!is.null(path_out)) {
