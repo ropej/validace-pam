@@ -821,23 +821,13 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   n_empty_fac <- if (!is.null(report$n_empty_facility_id)) report$n_empty_facility_id else NA_integer_
 
-  # Počet chybějících secondary facility_id
-  secondary_labels <- character()
-  secondary_values <- character()
-
-  if (!is.null(report$secondary_facilities) && length(report$secondary_facilities) > 0) {
-    for (i in seq_along(report$secondary_facilities)) {
-      sec_id <- report$secondary_facilities[[i]]
-      sec_name <- names(report$secondary_facilities)[i]
-      n_empty <- report$secondary_empty_counts[i]
-
-      if (!is.na(n_empty)) {
-        pct <- round(n_empty / report$overview$n_rows * 100, 2)
-        secondary_labels <- c(secondary_labels, paste0("Počet chybějících ", sec_id))
-        secondary_values <- c(secondary_values, sprintf("%d (%.1f %%)", n_empty, pct))
-      }
-    }
-  }
+  # Počet chybějícího secondary facility_id (red_izo/ico)
+  n_empty_secondary_fac <- if (!is.null(report$n_empty_secondary_facility_id)) report$n_empty_secondary_facility_id else NA_integer_
+  secondary_facility_name <- if (!is.null(report$secondary_facility_id)) report$secondary_facility_id else NA_character_
+  secondary_fac_formatted <- if (!is.na(n_empty_secondary_fac) && !is.na(secondary_facility_name)) {
+    pct <- round(n_empty_secondary_fac / report$overview$n_rows * 100, 2)
+    sprintf("%d (%.1f %%)", n_empty_secondary_fac, pct)
+  } else NA_character_
 
   n_empty_lbl <- if (!is.null(report$strange_behaviour) &&
                      "existing_label" %in% names(report$strange_behaviour))
@@ -950,7 +940,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               if (report$overview$n_rows_with_na_mes > 0) "Počet řádků s mes=NA" else "",
               kv_extra_labels,
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
-              secondary_labels,
+              if (!is.na(secondary_label)) secondary_label else "",
               "Počet prázdných labelů",
               "Existence cyklických nul",
               "Existence nekonzistentního měření",
@@ -960,7 +950,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               if (report$overview$n_rows_with_na_mes > 0) as.character(report$overview$n_rows_with_na_mes) else "",
               kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
-              secondary_values,
+              if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else "",
               as.character(n_empty_lbl),
               as.character(cyclic_zeros_detected),
               as.character(exist_inkonz),
@@ -1762,27 +1752,12 @@ validace_pam <- function(
     sum(is.na(fac) | fac == "", na.rm = TRUE)
   } else NA_integer_
 
-  # Počet chybějících "druhého" facility_id
-  # Pro rid: kontroluj ico i red_izo
-  # Pro ico/red_izo: kontroluj druhý
-  secondary_facilities <- if (facility_id == "rid") {
-    list(ico = "ico", red_izo = "red_izo")
-  } else if (facility_id == "red_izo") {
-    list(ico = "ico")
-  } else if (facility_id == "ico") {
-    list(red_izo = "red_izo")
-  } else {
-    list()
-  }
-
-  secondary_empty_counts <- map_int(secondary_facilities, function(sec_id) {
-    if (sec_id %in% names(data)) {
-      fac_sec <- data[[sec_id]]
-      sum(is.na(fac_sec) | fac_sec == "", na.rm = TRUE)
-    } else {
-      NA_integer_
-    }
-  })
+  # Počet chybějících "druhého" facility_id (jen pro P1-04 a P1c)
+  secondary_facility_id <- if (facility_id == "red_izo") "ico" else if (facility_id == "ico") "red_izo" else NA_character_
+  n_empty_secondary_facility_id <- if (!is.na(secondary_facility_id) && secondary_facility_id %in% names(data)) {
+    fac_sec <- data[[secondary_facility_id]]
+    sum(is.na(fac_sec) | fac_sec == "", na.rm = TRUE)
+  } else NA_integer_
 
   report <- list(
     overview               = overview,
@@ -1795,8 +1770,8 @@ validace_pam <- function(
     max_rok_filter         = effective_max_rok,
     facility_id            = facility_id,
     n_empty_facility_id    = n_empty_facility_id,
-    secondary_facilities   = secondary_facilities,
-    secondary_empty_counts = secondary_empty_counts,
+    secondary_facility_id  = secondary_facility_id,
+    n_empty_secondary_facility_id = n_empty_secondary_facility_id,
     cyclic_zeros_detected  = cyclic_zeros_detected
   )
 
