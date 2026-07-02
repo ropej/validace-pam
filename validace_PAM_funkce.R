@@ -304,7 +304,6 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
   stopifnot(all(c("rok", "mes") %in% names(data)))
 
   freq_kontrolovane <- freq_table |>
-    # filter(frekvence_mereni != "nepravidelná")
     filter(map_int(ocekavane_mesice, length) > 0)
 
   if (nrow(freq_kontrolovane) == 0) {
@@ -324,16 +323,18 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
     group_by(polozka_index, rok) |>
     summarise(merene_mesice = list(sort(unique(mes))), .groups = "drop")
 
+  freq_info <- freq_table |>
+    select(polozka_index, frekvence_mereni, ocekavane_mesice)
+
   merene |>
-    left_join(freq_table |> select(polozka_index, frekvence_mereni, ocekavane_mesice),
-              by = "polozka_index") |>
-    mutate(chybejici_mesice = map2(ocekavane_mesice, merene_mesice, ~ setdiff(.x, .y)),
-           mereni_ok        = map_lgl(chybejici_mesice, ~ length(.x) == 0),
-           merene_mesice    = map_chr(merene_mesice,    ~ paste(.x, collapse = ",")),
-           chybejici_mesice = map_chr(chybejici_mesice,
-                                      ~ if (length(.x) == 0) "" else paste(.x, collapse = ",")
-                                      )
-           ) |>
+    left_join(freq_info, by = "polozka_index") |>
+    mutate(
+      chybejici_mesice = map2(ocekavane_mesice, merene_mesice, ~ setdiff(.x, .y)),
+      mereni_ok = map_lgl(chybejici_mesice, ~ length(.x) == 0),
+      merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")),
+      chybejici_mesice = map_chr(chybejici_mesice,
+                                 ~ if (length(.x) == 0) "" else paste(.x, collapse = ","))
+    ) |>
     select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
 }
 
