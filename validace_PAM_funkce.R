@@ -428,7 +428,8 @@ summarise_pam_variables <- function(data, id_cols,
                                     r_pattern          = "^r\\d{1}",
                                     outlier_multiplier = 3,
                                     vykaz              = NULL,
-                                    oddil              = NULL) {
+                                    oddil              = NULL,
+                                    facility_id        = "ico") {
 
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
 
@@ -485,9 +486,6 @@ summarise_pam_variables <- function(data, id_cols,
 
   # --- diff-based statistiky (jen pro sub-roční frekvence) ---
   diff_static_cols <- intersect(c("hosp_druh", "plat_rad", "druh_pam"), names(data))
-  # DEBUG
-  cat("[DEBUG summarise_pam] facility_id class:", class(facility_id), "length:", length(facility_id), "value:", facility_id, "\n")
-  cat("[DEBUG summarise_pam] facility_id %in% names(data):", facility_id %in% names(data), "\n")
   if (facility_id %in% names(data)) {
     diff_static_cols <- c(facility_id, diff_static_cols)
   }
@@ -1696,7 +1694,6 @@ validace_pam <- function(
   }
 
   log("\n── Krok 4: Výpočet souhrnných statistik ────────────────────────")
-  log("[DEBUG] facility_id: class=", class(facility_id), " length=", length(facility_id), " value='", paste(facility_id, collapse=","), "'")
   summary_table <- summarise_pam_variables(
     data               = data,
     id_cols            = id_cols,
@@ -1706,7 +1703,8 @@ validace_pam <- function(
     r_pattern          = r_pattern,
     outlier_multiplier = outlier_multiplier,
     vykaz              = vykaz,
-    oddil              = oddil
+    oddil              = oddil,
+    facility_id        = facility_id
   )
   log("  Hotovo – ", nrow(summary_table), " proměnných zpracováno.")
 
