@@ -304,7 +304,7 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
   stopifnot(all(c("rok", "mes") %in% names(data)))
 
   freq_kontrolovane <- freq_table |>
-    filter(frekvence_mereni != "nepravidelná") |>
+    # filter(frekvence_mereni != "nepravidelná")
     filter(map_int(ocekavane_mesice, length) > 0)
 
   if (nrow(freq_kontrolovane) == 0) {
@@ -812,7 +812,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- r + 1L
 
   # Report vytvořen
-  writeData(wb, "Report overview", tibble(x = paste0("Report vytvořen: ", format(Sys.Date(), "%d.%m.%Y"))),
+  writeData(wb, "Report overview", tibble(x = paste0("Report vytvořen: ", format(Sys.time(), "%d.%m.%Y v %H:%M"))),
             startRow = r, colNames = FALSE)
   r <- r + 1L
 
