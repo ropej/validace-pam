@@ -196,9 +196,12 @@ check_pam_structure <- function(data, id_cols, r_pattern = "^r\\d{3}$") {
     filter(n > 1) |>
     arrange(desc(n))
 
+  n_rows_na_mes <- if ("mes" %in% names(data)) sum(is.na(data$mes)) else 0
+
   list(
     n_rows                  = nrow(data),
     n_cols                  = ncol(data),
+    n_rows_with_na_mes      = n_rows_na_mes,
     missing_id_cols         = if (length(missing_id_cols) == 0) "žádné"
                               else paste(missing_id_cols, collapse = ", "),
     n_r_variables           = length(r_cols),
@@ -931,9 +934,15 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
 
+  na_mes_label <- if (report$overview$n_rows_with_na_mes > 0)
+    "Počet řádků s mes=NA" else character(0)
+  na_mes_value <- if (report$overview$n_rows_with_na_mes > 0)
+    as.character(report$overview$n_rows_with_na_mes) else character(0)
+
   kv <- tibble(
     label = c("Identifikátor zařízení",
               "Počet let", "Počet řádků",
+              na_mes_label,
               kv_extra_labels,
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
               if (!is.na(secondary_label)) secondary_label else character(0),
@@ -943,6 +952,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               "Existence duplicit", "Počet duplicit"),
     value = c(if (!is.null(report$facility_id)) report$facility_id else "",
               as.character(max_years), as.character(report$overview$n_rows),
+              na_mes_value,
               kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
               if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else character(0),
