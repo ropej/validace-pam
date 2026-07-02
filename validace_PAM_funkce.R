@@ -950,7 +950,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               if (report$overview$n_rows_with_na_mes > 0) as.character(report$overview$n_rows_with_na_mes) else "",
               kv_extra_values,
               as.character(n_neg), as.character(n_empty_fac),
-              if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else character(0),
+              if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else "",
               as.character(n_empty_lbl),
               as.character(cyclic_zeros_detected),
               as.character(exist_inkonz),
