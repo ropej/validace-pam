@@ -810,6 +810,12 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- wr_header("Název výkazu", r)
   writeData(wb, "Report overview", tibble(x = vykaz), startRow = r, colNames = FALSE)
   r <- r + 1L
+
+  # Report vytvořen
+  writeData(wb, "Report overview", tibble(x = paste0("Report vytvořen: ", format(Sys.Date(), "%d.%m.%Y"))),
+            startRow = r, colNames = FALSE)
+  r <- r + 1L
+
   if (!is.null(report$max_rok_filter)) {
     writeData(wb, "Report overview",
               tibble(x = paste0("Filtrováno na roky ≤ ", report$max_rok_filter)),
