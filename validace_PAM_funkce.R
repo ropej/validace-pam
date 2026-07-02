@@ -943,8 +943,12 @@ write_pam_validation_xlsx <- function(report, path_out) {
 
   cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
 
+  id_cols_str <- if (!is.null(report$overview$id_cols_without_time) && length(report$overview$id_cols_without_time) > 0)
+    paste(report$overview$id_cols_without_time, collapse = ", ") else ""
+
   kv <- tibble(
     label = c("Identifikátor zařízení",
+              "Identifikátory jedinečných řádků",
               "Počet let", "Počet řádků",
               if (report$overview$n_rows_with_na_mes > 0) "Počet řádků s mes=NA" else "",
               kv_extra_labels,
@@ -955,6 +959,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
     value = c(if (!is.null(report$facility_id)) report$facility_id else "",
+              id_cols_str,
               as.character(max_years), as.character(report$overview$n_rows),
               if (report$overview$n_rows_with_na_mes > 0) as.character(report$overview$n_rows_with_na_mes) else "",
               kv_extra_values,
@@ -1694,6 +1699,8 @@ validace_pam <- function(
   overview <- check_pam_structure(data, id_cols = id_cols_full, r_pattern = r_pattern)
   # Přepis n_rows_with_na_mes na hodnotu PŘED filtrací roku
   overview$n_rows_with_na_mes <- n_rows_na_mes_before_filter
+  # Identifikátory bez roku a měsíce (slouží k jednoznačné identifikaci řádku v čase)
+  overview$id_cols_without_time <- setdiff(id_cols_full, c("rok", "mes"))
   log("  Řádků: ", overview$n_rows,
       " | r-kových proměnných: ", overview$n_r_variables,
       " | Duplicitní klíče: ", overview$n_duplicate_keys)
