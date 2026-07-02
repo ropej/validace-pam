@@ -216,10 +216,10 @@ check_pam_structure <- function(data, id_cols, r_pattern = "^r\\d{3}$") {
 #
 # Kategorie (na základě modus_mesicu_za_rok):
 #   "měsíční"      … 12 měsíců/rok
-#   "pololetní"    … 6 měsíců/rok
-#   "čtvrtletní"   … 3–4 měsíce/rok
-#   "roční"        … 1 měsíc/rok
-#   "nepravidelná" … jinak (2 měsíce/rok, 5+ měsíců/rok, atd.)
+#   "pololetní"    … 6 měsíců/rok (březen, červen, září, prosinec)
+#   "čtvrtletní"   … 4 měsíce/rok (březen, červen, září, prosinec)
+#   "roční"        … 1 měsíc/rok (prosinec)
+#   "nepravidelná" … jinak (2–3, 5+ měsíců/rok, atd.)
 #
 # OUTPUT: tibble polozka_index | frekvence_mereni | modus_mesicu_za_rok |
 #                              | roky_s_merenims  | ocekavane_mesice
@@ -270,7 +270,7 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
         is.na(modus_mesicu_za_rok)  ~ "neměřeno",
         modus_mesicu_za_rok == 12   ~ "měsíční",
         modus_mesicu_za_rok == 6    ~ "pololetní",
-        modus_mesicu_za_rok %in% c(3, 4) ~ "čtvrtletní",
+        modus_mesicu_za_rok == 4    ~ "čtvrtletní",
         modus_mesicu_za_rok == 1    ~ "roční",
         TRUE                        ~ "nepravidelná"
       ),
