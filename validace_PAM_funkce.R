@@ -35,10 +35,10 @@ clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$") {
   # Pro každou r-proměnnou a měsíc: zkontroluj, zda jsou VŠECHNY hodnoty nula
   # Ignoruj řádky s mes = NA
   zero_months <- map_dfr(r_cols, function(var) {
-    vals <- suppressWarnings(as.numeric(data[[var]]))
+    data_filt <- data |> filter(!is.na(mes))
+    vals <- suppressWarnings(as.numeric(data_filt[[var]]))
 
-    data |>
-      filter(!is.na(mes)) |>
+    data_filt |>
       mutate(!!var := vals) |>
       group_by(mes) |>
       summarise(
