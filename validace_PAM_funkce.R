@@ -929,7 +929,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
     }
   }
 
-  secondary_label <- if (!is.na(secondary_facility_name))
+  secondary_label <- if (!is.na(secondary_facility_name) && !is.na(n_empty_secondary_fac))
     paste0("Počet chybějících ", secondary_facility_name) else NA_character_
 
   cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
