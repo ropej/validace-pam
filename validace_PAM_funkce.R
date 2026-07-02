@@ -1545,11 +1545,23 @@ validace_pam <- function(
     verbose            = TRUE,
     vykaz              = NULL,
     oddil              = NULL,
+    clean_zeros        = TRUE,    # T/F: čistit cyklické nuly (100% nula per měsíc)
     compare_data       = FALSE,   # T/F: srovnat tento report s kontrolní várkou
     path_control       = NULL     # složka s kontrolními (staršími) xlsx reporty
 ) {
 
   log <- function(...) if (verbose) message(...)
+
+  # --- Čištění cyklických nul (měsíce 100% nula = neměřeny) ---
+  if (clean_zeros && "mes" %in% names(data)) {
+    clean_result <- clean_cyclic_zeros(data, r_pattern = r_pattern)
+    data <- clean_result$data
+    if (!is.null(clean_result$report) && nrow(clean_result$report) > 0) {
+      log("\n── Čištění cyklických nul ──")
+      log("Konvertovány nuly na NA v měsících (100% nula = neměřeno):")
+      print(clean_result$report)
+    }
+  }
 
   missing_cols <- setdiff(c(id_cols, "rok", "mes"), names(data))
   if (length(missing_cols) > 0)

@@ -72,15 +72,6 @@ pam_1_04 <- pam_1_04_all |>
   select(any_of(id_cols), any_of(facility_id), matches("^r\\d{3}")) |>
   rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{3}"))
 
-# Čištění cyklických nul (měsíce 100% nula = neměřeny)
-clean_result_p104 <- clean_cyclic_zeros(pam_1_04, r_pattern = "^r\\d{3}$")
-pam_1_04 <- clean_result_p104$data
-if (!is.null(clean_result_p104$report) && nrow(clean_result_p104$report) > 0) {
-  message("\n── P1-04: Čištění cyklických nul ──")
-  message("Konvertovány nuly na NA v měsících (100% nula = neměřeno):")
-  print(clean_result_p104$report)
-}
-
 # --- P1a ---
 pam_1a_all <- read_parquet(
   file.path(path_parquet, "P1a", "parquet", "pam_1a_all_long_raw.parquet")
@@ -101,17 +92,6 @@ pam_p1c_all <- setNames(
   map(files_p1c, read_parquet),
   str_match(basename(files_p1c), "^odd_(.+)\\.parquet$")[, 2]
 )
-
-# Čištění cyklických nul pro P1c (stejně jako pro P1-04)
-pam_p1c_all <- imap(pam_p1c_all, function(d, oddil) {
-  if (oddil == "0") return(d)  # Oddíl 0 přeskočit
-  clean_result <- clean_cyclic_zeros(d, r_pattern = "^r\\d{1}$")
-  if (!is.null(clean_result$report) && nrow(clean_result$report) > 0) {
-    message("\n── P1c oddíl ", oddil, ": Čištění cyklických nul ──")
-    print(clean_result$report)
-  }
-  clean_result$data
-})
 
 
 # ==============================================================================
