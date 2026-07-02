@@ -810,20 +810,6 @@ write_pam_validation_xlsx <- function(report, path_out) {
   r <- wr_header("Název výkazu", r)
   writeData(wb, "Report overview", tibble(x = vykaz), startRow = r, colNames = FALSE)
   r <- r + 1L
-
-  # Report vytvořen
-  writeData(wb, "Report overview", tibble(x = paste0("Report vytvořen: ", format(Sys.Date(), "%d.%m.%Y"))),
-            startRow = r, colNames = FALSE)
-  r <- r + 1L
-
-  # Existence cyklických nul
-  cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
-  if (cyclic_zeros_detected) {
-    writeData(wb, "Report overview", tibble(x = "Existence cyklických nul: ANO"),
-              startRow = r, colNames = FALSE)
-    r <- r + 1L
-  }
-
   if (!is.null(report$max_rok_filter)) {
     writeData(wb, "Report overview",
               tibble(x = paste0("Filtrováno na roky ≤ ", report$max_rok_filter)),
@@ -888,6 +874,8 @@ write_pam_validation_xlsx <- function(report, path_out) {
   secondary_label <- if (!is.na(secondary_facility_name))
     paste0("Počet chybějících ", secondary_facility_name) else NA_character_
 
+  cyclic_zeros_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
+
   kv <- tibble(
     label = c("Identifikátor zařízení",
               "Počet let", "Počet řádků",
@@ -895,6 +883,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
               if (!is.na(secondary_label)) secondary_label else character(0),
               "Počet prázdných labelů",
+              "Existence cyklických nul",
               "Existence nekonzistentního měření",
               "Existence duplicit", "Počet duplicit"),
     value = c(if (!is.null(report$facility_id)) report$facility_id else "",
@@ -903,6 +892,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
               as.character(n_neg), as.character(n_empty_fac),
               if (!is.na(secondary_fac_formatted)) secondary_fac_formatted else character(0),
               as.character(n_empty_lbl),
+              as.character(cyclic_zeros_detected),
               as.character(exist_inkonz),
               as.character(report$overview$existence_of_duplicates),
               as.character(report$overview$n_duplicate_keys))
