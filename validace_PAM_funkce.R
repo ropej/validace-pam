@@ -328,15 +328,20 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
     )
   }
 
-  long <- data |>
-    select(rok, mes, all_of(freq_kontrolovane$polozka_index)) |>
-    pivot_longer(cols = all_of(freq_kontrolovane$polozka_index),
+  # Pro všechny proměnné (kontrolované + nepravidelné)
+  long_all <- data |>
+    select(rok, mes, all_of(c(freq_kontrolovane$polozka_index, freq_nepravidelne$polozka_index))) |>
+    pivot_longer(cols = all_of(c(freq_kontrolovane$polozka_index, freq_nepravidelne$polozka_index)),
                  names_to  = "polozka_index",
                  values_to = "hodnota") |>
     mutate(hodnota_num = suppressWarnings(as.numeric(hodnota))) |>
     filter(!is.na(hodnota_num))
 
-  merene <- long |>
+  # Jen pro kontrolované (k podrobné kontrole)
+  long <- long_all |>
+    filter(polozka_index %in% freq_kontrolovane$polozka_index)
+
+  merene <- long_all |>
     group_by(polozka_index, rok) |>
     summarise(merene_mesice = list(sort(unique(mes))), .groups = "drop")
 
@@ -354,16 +359,24 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
     ) |>
     select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
 
-  # Přidat nepravidelné proměnné s NA mereni_ok
-  coverage_nepravidelne <- freq_nepravidelne |>
-    select(polozka_index, frekvence_mereni) |>
-    crossing(rok = unique(data$rok)) |>
-    mutate(merene_mesice = NA_character_,
-           chybejici_mesice = NA_character_,
-           mereni_ok = NA)
+  # Přidat nepravidelné proměnné - převzít merene_mesice z long_all, ale bez kontroly pokrytí
+  if (nrow(freq_nepravidelne) > 0) {
+    coverage_nepravidelne <- merene |>
+      filter(polozka_index %in% freq_nepravidelne$polozka_index) |>
+      left_join(freq_nepravidelne |> select(polozka_index, frekvence_mereni),
+                by = "polozka_index") |>
+      mutate(
+        merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")),
+        chybejici_mesice = NA_character_,
+        mereni_ok = NA
+      ) |>
+      select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
 
-  bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
-    arrange(polozka_index, rok)
+    bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
+      arrange(polozka_index, rok)
+  } else {
+    coverage_kontrolovane
+  }
 }
 
 
