@@ -1662,6 +1662,9 @@ validace_pam <- function(
   if (length(r_cols) == 0)
     stop("V datech nebyla nalezena žádná r-ková proměnná odpovídající vzoru: ", r_pattern)
 
+  # Počet mes=NA PŘED filtrací roku (aby se zobrazil i když se řádky později filtrují)
+  n_rows_na_mes_before_filter <- if ("mes" %in% names(data)) sum(is.na(data$mes)) else 0
+
   effective_max_rok <- NULL
   if (!is.null(max_rok)) {
     rok_int <- as.integer(data$rok)
@@ -1683,6 +1686,8 @@ validace_pam <- function(
       c(id_cols, facility_id)
   } else id_cols
   overview <- check_pam_structure(data, id_cols = id_cols_full, r_pattern = r_pattern)
+  # Přepis n_rows_with_na_mes na hodnotu PŘED filtrací roku
+  overview$n_rows_with_na_mes <- n_rows_na_mes_before_filter
   log("  Řádků: ", overview$n_rows,
       " | r-kových proměnných: ", overview$n_r_variables,
       " | Duplicitní klíče: ", overview$n_duplicate_keys)
