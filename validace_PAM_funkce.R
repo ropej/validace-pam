@@ -485,6 +485,9 @@ summarise_pam_variables <- function(data, id_cols,
 
   # --- diff-based statistiky (jen pro sub-roční frekvence) ---
   diff_static_cols <- intersect(c("hosp_druh", "plat_rad", "druh_pam"), names(data))
+  # DEBUG
+  cat("[DEBUG summarise_pam] facility_id class:", class(facility_id), "length:", length(facility_id), "value:", facility_id, "\n")
+  cat("[DEBUG summarise_pam] facility_id %in% names(data):", facility_id %in% names(data), "\n")
   if (facility_id %in% names(data)) {
     diff_static_cols <- c(facility_id, diff_static_cols)
   }
