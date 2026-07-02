@@ -65,7 +65,7 @@ clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$") {
     var <- zero_months$proměnná[i]
     month <- zero_months$mes[i]
 
-    mask <- data_clean$mes == month
+    mask <- !is.na(data_clean$mes) & data_clean$mes == month
     v <- suppressWarnings(as.numeric(data_clean[[var]]))
     v[mask & v == 0] <- NA
     data_clean[[var]] <- v
