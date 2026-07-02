@@ -24,7 +24,7 @@
 # pro danou r-proměnnou (měsíc je "neměřen")
 # ------------------------------------------------------------------------------
 
-clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$") {
+clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$", max_rok = NULL, effective_max_rok = NULL) {
 
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
 
@@ -33,9 +33,11 @@ clean_cyclic_zeros <- function(data, r_pattern = "^r\\d{3}$") {
   }
 
   # Pro každou r-proměnnou a měsíc: zkontroluj, zda jsou VŠECHNY hodnoty nula
-  # Ignoruj řádky s mes = NA
+  # Ignoruj řádky s mes = NA a data mimo max_rok limit
   zero_months <- map_dfr(r_cols, function(var) {
-    data_filt <- data |> filter(!is.na(mes))
+    data_filt <- data |>
+      filter(!is.na(mes)) |>
+      filter(if (!is.null(effective_max_rok)) as.integer(rok) <= effective_max_rok else TRUE)
     vals <- suppressWarnings(as.numeric(data_filt[[var]]))
 
     data_filt |>
@@ -1635,11 +1637,22 @@ validace_pam <- function(
 
   log <- function(...) if (verbose) message(...)
 
+  # Compute effective_max_rok EARLY (needed for clean_cyclic_zeros)
+  effective_max_rok <- NULL
+  if (!is.null(max_rok)) {
+    rok_int <- as.integer(data$rok)
+    effective_max_rok <- if (all(rok_int < 100, na.rm = TRUE) && max_rok >= 100) {
+      max_rok %% 100
+    } else {
+      max_rok
+    }
+  }
+
   # --- Čištění cyklických nul (měsíce 100% nula = neměřeny) ---
   cyclic_zeros_detected <- FALSE
   log("\n[DEBUG] Podmínka cyklických nul: clean_zeros=", clean_zeros, ", 'mes' v datech=", "mes" %in% names(data))
   if (clean_zeros && "mes" %in% names(data)) {
-    clean_result <- clean_cyclic_zeros(data, r_pattern = r_pattern)
+    clean_result <- clean_cyclic_zeros(data, r_pattern = r_pattern, max_rok = max_rok, effective_max_rok = effective_max_rok)
     data <- clean_result$data
     if (!is.null(clean_result$report) && nrow(clean_result$report) > 0) {
       cyclic_zeros_detected <- TRUE
@@ -1665,14 +1678,7 @@ validace_pam <- function(
   # Počet mes=NA PŘED filtrací roku (aby se zobrazil i když se řádky později filtrují)
   n_rows_na_mes_before_filter <- if ("mes" %in% names(data)) sum(is.na(data$mes)) else 0
 
-  effective_max_rok <- NULL
   if (!is.null(max_rok)) {
-    rok_int <- as.integer(data$rok)
-    effective_max_rok <- if (all(rok_int < 100, na.rm = TRUE) && max_rok >= 100) {
-      max_rok %% 100
-    } else {
-      max_rok
-    }
     data <- data |> filter(as.integer(rok) <= effective_max_rok)
     log("  Filtrováno na roky ≤ ", effective_max_rok, " (", nrow(data), " řádků)")
   }
