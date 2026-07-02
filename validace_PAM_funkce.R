@@ -216,8 +216,8 @@ check_pam_structure <- function(data, id_cols, r_pattern = "^r\\d{3}$") {
 #
 # Kategorie (na základě modus_mesicu_za_rok):
 #   "měsíční"      … 12 měsíců/rok
-#   "pololetní"    … 6 měsíců/rok (březen, červen, září, prosinec)
 #   "čtvrtletní"   … 4 měsíce/rok (březen, červen, září, prosinec)
+#   "pololetní"    … 2 měsíců/rok (březen, prosinec)
 #   "roční"        … 1 měsíc/rok (prosinec)
 #   "nepravidelná" … jinak (2–3, 5+ měsíců/rok, atd.)
 #
@@ -269,8 +269,8 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
       frekvence_mereni = case_when(
         is.na(modus_mesicu_za_rok)  ~ "neměřeno",
         modus_mesicu_za_rok == 12   ~ "měsíční",
-        modus_mesicu_za_rok == 6    ~ "pololetní",
         modus_mesicu_za_rok == 4    ~ "čtvrtletní",
+        modus_mesicu_za_rok == 2    ~ "pololetní",
         modus_mesicu_za_rok == 1    ~ "roční",
         TRUE                        ~ "nepravidelná"
       ),
@@ -1003,6 +1003,16 @@ write_pam_validation_xlsx <- function(report, path_out) {
   addWorksheet(wb, sheetName = "Summary")
   writeData(wb, "Summary", summary_out)
 
+  # --- Frequency coverage ---
+  if (!is.null(report$coverage) && nrow(report$coverage) > 0) {
+    frequency_coverage <- report$coverage |>
+      select(polozka_index, frekvence_mereni, merene_mesice, chybejici_mesice) |>
+      distinct()
+
+    addWorksheet(wb, sheetName = "Frequency coverage")
+    writeData(wb, "Frequency coverage", frequency_coverage)
+  }
+
   # --- příprava Strange behaviour ---
   sb <- report$strange_behaviour
 
@@ -1118,6 +1128,16 @@ write_pam_validation_xlsx <- function(report, path_out) {
         addStyle(wb, sheet, dec3_style, rows = 2:n_rows, cols = dec3_cols, gridExpand = TRUE)
       if (length(num_cols) > 0)
         addStyle(wb, sheet, num_style, rows = 2:n_rows, cols = num_cols, gridExpand = TRUE)
+    }
+
+    if (sheet == "Frequency coverage" && n_rows > 1) {
+      # polozka_index: zúžit šířku, ostatní: normální
+      idx_col <- which(names(dat) == "polozka_index")
+      if (length(idx_col) > 0)
+        setColWidths(wb, sheet, cols = idx_col, widths = 14.67)
+      other_cols <- setdiff(seq_len(n_cols), idx_col)
+      if (length(other_cols) > 0)
+        setColWidths(wb, sheet, cols = other_cols, widths = col_widths[other_cols])
     }
   }
 
