@@ -305,11 +305,13 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
 
   # Proměnné s definovatelnou frekvencí (lze kontrolovat pokrytí)
   freq_kontrolovane <- freq_table |>
-    filter(map_int(ocekavane_mesice, length) > 0)
+    filter(map_int(ocekavane_mesice, length) > 0) |>
+    distinct(polozka_index, .keep_all = TRUE)
 
   # Proměnné s nedefinovatelnou frekvencí (nepravidelné)
   freq_nepravidelne <- freq_table |>
-    filter(map_int(ocekavane_mesice, length) == 0)
+    filter(map_int(ocekavane_mesice, length) == 0) |>
+    distinct(polozka_index, .keep_all = TRUE)
 
   # Pokud nejsou žádné kontrolovatelné proměnné, vrátit jen nepravidelné
   if (nrow(freq_kontrolovane) == 0) {
