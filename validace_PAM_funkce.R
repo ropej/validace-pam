@@ -303,12 +303,29 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
 
   stopifnot(all(c("rok", "mes") %in% names(data)))
 
+  # Proměnné s definovatelnou frekvencí (lze kontrolovat pokrytí)
   freq_kontrolovane <- freq_table |>
     filter(map_int(ocekavane_mesice, length) > 0)
 
+  # Proměnné s nedefinovatelnou frekvencí (nepravidelné)
+  freq_nepravidelne <- freq_table |>
+    filter(map_int(ocekavane_mesice, length) == 0)
+
+  # Pokud nejsou žádné kontrolovatelné proměnné, vrátit jen nepravidelné
   if (nrow(freq_kontrolovane) == 0) {
-    message("Žádná proměnná nemá definovatelnou frekvenci – coverage přeskočena.")
-    return(tibble())
+    if (nrow(freq_nepravidelne) == 0) {
+      message("Žádná proměnná nemá definovatelnou frekvenci – coverage přeskočena.")
+      return(tibble())
+    }
+    # Vrátit jen nepravidelné s NA mereni_ok
+    return(
+      freq_nepravidelne |>
+        select(polozka_index, frekvence_mereni) |>
+        crossing(rok = unique(data$rok)) |>
+        mutate(merene_mesice = NA_character_,
+               chybejici_mesice = NA_character_,
+               mereni_ok = NA)
+    )
   }
 
   long <- data |>
@@ -323,10 +340,10 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
     group_by(polozka_index, rok) |>
     summarise(merene_mesice = list(sort(unique(mes))), .groups = "drop")
 
-  freq_info <- freq_table |>
+  freq_info <- freq_kontrolovane |>
     select(polozka_index, frekvence_mereni, ocekavane_mesice)
 
-  merene |>
+  coverage_kontrolovane <- merene |>
     left_join(freq_info, by = "polozka_index") |>
     mutate(
       chybejici_mesice = map2(ocekavane_mesice, merene_mesice, ~ setdiff(.x, .y)),
@@ -336,6 +353,17 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
                                  ~ if (length(.x) == 0) "" else paste(.x, collapse = ","))
     ) |>
     select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
+
+  # Přidat nepravidelné proměnné s NA mereni_ok
+  coverage_nepravidelne <- freq_nepravidelne |>
+    select(polozka_index, frekvence_mereni) |>
+    crossing(rok = unique(data$rok)) |>
+    mutate(merene_mesice = NA_character_,
+           chybejici_mesice = NA_character_,
+           mereni_ok = NA)
+
+  bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
+    arrange(polozka_index, rok)
 }
 
 
