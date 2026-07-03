@@ -49,3 +49,71 @@ cycling_results <- list(
 # cycling_results$p1_04 |> filter(cycling_zeros == TRUE) |> head(20)
 # cycling_results$p1a |> filter(cycling_zeros == TRUE) |> head(20)
 # cycling_results$p1c |> filter(cycling_zeros == TRUE) |> head(20)
+
+# ==============================================================================
+# Souhrn: cyklické nuly per proměnná
+# ==============================================================================
+
+summarise_cycling_zeros <- function(cycling_results) {
+
+  summary_list <- list()
+
+  # P1-04
+  if (!is.null(cycling_results$p1_04)) {
+    summary_list$p1_04 <- cycling_results$p1_04 |>
+      group_by(polozka_index) |>
+      summarise(
+        cycle_TRUE = sum(cycling_zeros == TRUE, na.rm = TRUE),
+        cycle_FALSE = sum(cycling_zeros == FALSE, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      mutate(
+        vykaz = "p1_04",
+        difference_cycling = !(cycle_TRUE == 0 | cycle_FALSE == 0)
+      ) |>
+      select(vykaz, polozka_index, cycle_TRUE, cycle_FALSE, difference_cycling)
+  }
+
+  # P1a
+  if (!is.null(cycling_results$p1a)) {
+    summary_list$p1a <- cycling_results$p1a |>
+      group_by(polozka_index) |>
+      summarise(
+        cycle_TRUE = sum(cycling_zeros == TRUE, na.rm = TRUE),
+        cycle_FALSE = sum(cycling_zeros == FALSE, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      mutate(
+        vykaz = "p1a",
+        difference_cycling = !(cycle_TRUE == 0 | cycle_FALSE == 0)
+      ) |>
+      select(vykaz, polozka_index, cycle_TRUE, cycle_FALSE, difference_cycling)
+  }
+
+  # P1c (s oddílem)
+  if (!is.null(cycling_results$p1c)) {
+    summary_list$p1c <- cycling_results$p1c |>
+      group_by(oddil, polozka_index) |>
+      summarise(
+        cycle_TRUE = sum(cycling_zeros == TRUE, na.rm = TRUE),
+        cycle_FALSE = sum(cycling_zeros == FALSE, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      mutate(
+        vykaz = paste0("p1c_", oddil),
+        difference_cycling = !(cycle_TRUE == 0 | cycle_FALSE == 0)
+      ) |>
+      select(vykaz, polozka_index, cycle_TRUE, cycle_FALSE, difference_cycling)
+  }
+
+  # Kombinuj všechny
+  bind_rows(summary_list)
+}
+
+# Spustit
+cycling_summary <- summarise_cycling_zeros(cycling_results)
+
+# Příklady:
+# cycling_summary |> filter(difference_cycling == TRUE)  # Smíšené (někdy TRUE, někdy FALSE)
+# cycling_summary |> filter(cycle_TRUE > 0)              # Má cyklické nuly
+# cycling_summary |> filter(vykaz == "p1_04") |> head(20)
