@@ -1314,10 +1314,11 @@ porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
   }
 
   # metriky (label | hodnota) z listu "Report overview" – jen whitelist kv řádků
+  # Poznámka: dynamické labely (Počet chybějících ico/rid/red_izo) se budou matchovat jako regex
   ov_labels <- c("Identifikátor zařízení", "Počet let", "Počet řádků",
-                 "Počet záporných proměnných", "Počet nevyplněných identifikátorů",
+                 "Počet záporných proměnných",
                  "Počet prázdných labelů", "Existence nekonzistentního měření",
-                 "Existence duplicit", "Počet duplicit")
+                 "Existence cyklických nul", "Existence duplicit", "Počet duplicit")
   nacti_overview <- function(path) {
     if (!file.exists(path) || !"Report overview" %in% readxl::excel_sheets(path))
       return(tibble(variable = character(), value = character()))
@@ -1326,7 +1327,7 @@ porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
     names(df)[1:2] <- c("variable", "value")
     df |>
       transmute(variable = as.character(variable), value = as.character(value)) |>
-      filter(variable %in% ov_labels) |>
+      filter(variable %in% ov_labels | str_detect(variable, "^Počet chybějících")) |>
       bind_rows(
         # Agreguj "Výskyt závažných chyb" a "Výskyt zvláštního chování" — sečti počty
         {
