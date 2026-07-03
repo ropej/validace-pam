@@ -13,10 +13,11 @@ cycling_p1_04 <- check_cycling_zeros_per_var(
 )
 
 # --- P1a ---
+# P1a má jen: rok, mes, rid (bez druh, kategorie, stupen, zdroj)
 cycling_p1a <- check_cycling_zeros_per_var(
   data = pam_1a,
   r_pattern = "^r\\d{1}",
-  id_cols_full = c("rok", "mes", "druh", "rid"),
+  id_cols_full = c("rok", "mes", "rid"),
   facility_id = "rid"
 )
 
