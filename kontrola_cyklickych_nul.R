@@ -5,20 +5,20 @@
 # Použití: po spuštění validace_PAM.R
 
 # --- P1-04 ---
-# Identifikátory jedinečných řádků: hosp_druh, plat_rad
+# Identifikátory ve výstupu: hosp_druh, plat_rad
 cycling_p1_04 <- check_cycling_zeros_per_var(
   data = pam_1_04,
   r_pattern = "^r\\d{3}$",
-  id_cols_full = c("rok", "mes", "hosp_druh", "plat_rad", "ico"),
+  id_cols_full = c("hosp_druh", "plat_rad"),
   facility_id = "ico"
 )
 
 # --- P1a ---
-# P1a má jen: rok, mes, rid (bez druh, kategorie, stupen, zdroj)
+# Žádné identifikátory (jen rok × měsíc) - vrátí jednoduchou tabulku
 cycling_p1a <- check_cycling_zeros_per_var(
   data = pam_1a,
   r_pattern = "^r\\d{1}",
-  id_cols_full = c("rok", "mes", "rid"),
+  id_cols_full = c(),
   facility_id = "rid"
 )
 
@@ -26,12 +26,13 @@ cycling_p1a <- check_cycling_zeros_per_var(
 cycling_p1c_all <- imap(pam_p1c_all, function(d, oddil) {
   if (oddil == "0") return(NULL)
 
-  id_cols <- intersect(c("rok", "mes", "druh", "kategorie", "stupen", "zdroj"), names(d))
+  # Identifikátory ve výstupu: druh, kategorie, stupen, zdroj (pokud existují v datech)
+  id_cols <- intersect(c("druh", "kategorie", "stupen", "zdroj"), names(d))
 
   check_cycling_zeros_per_var(
     data = d,
     r_pattern = "^r\\d{1}",
-    id_cols_full = c(id_cols, "ico"),
+    id_cols_full = id_cols,
     facility_id = "ico"
   ) |>
     mutate(oddil = oddil)
