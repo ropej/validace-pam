@@ -837,11 +837,16 @@ check_cycling_zeros_per_var <- function(data, r_pattern = "^r\\d{3}$", id_cols_f
       distinct(across(all_of(id_cols_base)))
 
     # Join: pokud chybí v cycling_detected, je FALSE
-    all_combos |>
-      left_join(cycling_detected, by = id_cols_base) |>
-      mutate(cycling_zeros = if_else(is.na(cycling_zeros), FALSE, cycling_zeros),
-             polozka_index = var) |>
-      select(polozka_index, all_of(id_cols_base), cycling_zeros)
+    if (length(id_cols_base) == 0) {
+      # Když nejsou žádné ID sloupce, vrátíme jednoduchou tabulku
+      tibble(polozka_index = var, cycling_zeros = nrow(cycling_detected) > 0)
+    } else {
+      all_combos |>
+        left_join(cycling_detected, by = id_cols_base) |>
+        mutate(cycling_zeros = if_else(is.na(cycling_zeros), FALSE, cycling_zeros),
+               polozka_index = var) |>
+        select(polozka_index, all_of(id_cols_base), cycling_zeros)
+    }
   })
 
   result_list
