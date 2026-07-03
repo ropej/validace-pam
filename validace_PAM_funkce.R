@@ -810,8 +810,9 @@ check_cycling_zeros_per_var <- function(data, r_pattern = "^r\\d{3}$", id_cols_f
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
   if (length(r_cols) == 0) return(NULL)
 
-  # ID bez roku, měsíce a facility_id
+  # ID bez roku, měsíce a facility_id, ale jen ty co existují v datech
   id_cols_base <- setdiff(id_cols_full, c("rok", "mes", facility_id))
+  id_cols_base <- intersect(id_cols_base, names(data))
 
   # Pro každou r-proměnnou a kombinaci ID: zjisti, zda existují měsíce s 100% nulami
   result_list <- map_dfr(r_cols, function(var) {
