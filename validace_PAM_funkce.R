@@ -14,8 +14,9 @@
 #   8. summarise_pam_variables()   – souhrnné statistiky r-kových proměnných
 #   9. make_pam_strange_behaviour()– příznaky podezřelého chování
 #  10. make_pam_examples()         – konkrétní příklady problémů
-#  11. write_pam_validation_xlsx() – zápis reportu do .xlsx
-#  12. validace_pam()         – hlavní orchestrační funkce
+#  11. check_cycling_zeros_per_var()– cyklické nuly per proměnná × ID kombinace
+#  12. write_pam_validation_xlsx() – zápis reportu do .xlsx
+#  13. validace_pam()         – hlavní orchestrační funkce
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -791,9 +792,63 @@ make_pam_examples <- function(data, id_cols, summary_table,
            !is.na(outliers_per_facility) | !is.na(inconsistent_mereni))
 }
 
+# ------------------------------------------------------------------------------
+# 11. check_cycling_zeros_per_var()
+# Detekce cyklických nul per proměnnou × kombinace ID (bez roku, měsíce, facility_id).
+#
+# INPUT:
+#   data         – tibble s daty
+#   r_pattern    – regex pro r-kové proměnné
+#   id_cols_full – všechny id sloupce (včetně roku, měsíce, facility_id)
+#   facility_id  – jméno sloupce s facility_id
+# OUTPUT:
+#   tibble s polozka_index, id kombinace (sloupce), cycling_zeros (TRUE/FALSE)
+# ------------------------------------------------------------------------------
+
+check_cycling_zeros_per_var <- function(data, r_pattern = "^r\\d{3}$", id_cols_full, facility_id) {
+
+  r_cols <- names(data)[str_detect(names(data), r_pattern)]
+  if (length(r_cols) == 0) return(NULL)
+
+  # ID bez roku, měsíce a facility_id
+  id_cols_base <- setdiff(id_cols_full, c("rok", "mes", facility_id))
+
+  # Pro každou r-proměnnou a kombinaci ID: zjisti, zda existují měsíce s 100% nulami
+  result_list <- map_dfr(r_cols, function(var) {
+    data_grouped <- data |>
+      filter(!is.na(mes)) |>
+      group_by(across(all_of(id_cols_base)), mes) |>
+      summarise(
+        all_zero_in_mes = all(is.na(!!sym(var)) | !!sym(var) == 0),
+        n_values = sum(!is.na(!!sym(var))),
+        .groups = "drop"
+      )
+
+    # Existují cyklické nuly pro tuto kombinaci ID?
+    cycling_detected <- data_grouped |>
+      filter(all_zero_in_mes, n_values > 0) |>
+      group_by(across(all_of(id_cols_base))) |>
+      summarise(cycling_zeros = TRUE, .groups = "drop")
+
+    # Všechny kombinace ID pro tuto proměnnou
+    all_combos <- data |>
+      filter(!is.na(mes)) |>
+      distinct(across(all_of(id_cols_base)))
+
+    # Join: pokud chybí v cycling_detected, je FALSE
+    all_combos |>
+      left_join(cycling_detected, by = id_cols_base) |>
+      mutate(cycling_zeros = if_else(is.na(cycling_zeros), FALSE, cycling_zeros),
+             polozka_index = var) |>
+      select(polozka_index, all_of(id_cols_base), cycling_zeros)
+  })
+
+  result_list
+}
+
 
 # ------------------------------------------------------------------------------
-# 11. write_pam_validation_xlsx()
+# 12. write_pam_validation_xlsx()
 # Uložení validačního reportu do .xlsx souboru.
 #
 # INPUT:
