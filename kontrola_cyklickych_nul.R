@@ -5,10 +5,11 @@
 # Použití: po spuštění validace_PAM.R
 
 # --- P1-04 ---
+# Identifikátory jedinečných řádků: hosp_druh, plat_rad
 cycling_p1_04 <- check_cycling_zeros_per_var(
   data = pam_1_04,
   r_pattern = "^r\\d{3}$",
-  id_cols_full = c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam", "ico"),
+  id_cols_full = c("rok", "mes", "hosp_druh", "plat_rad", "ico"),
   facility_id = "ico"
 )
 
