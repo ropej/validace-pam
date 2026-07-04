@@ -602,12 +602,13 @@ summarise_pam_variables <- function(data, id_cols,
 
     label_keys <- if (!is.null(oddil)) {
       code <- oddil_to_code(oddil)
-      # Odseknout suffix .P1C (nebo jakýkoli suffix po tečce)
-      polozka_clean <- str_remove(summary_table$polozka_index, "\\..*$")
-      paste0("r", code, "0", str_extract(polozka_clean, "\\d{2}$"))
+      # P1c: přeměň r1, r2 na r101, r202 apod.
+      paste0("r", code, "0", str_extract(summary_table$polozka_index, "\\d{2}$"))
     } else if (r_pattern == "^r\\d{3}$") {
+      # P1-04: přeměň r123 na r0123
       str_replace(summary_table$polozka_index, "^r(\\d)(\\d{2})$", "r0\\10\\2")
     } else {
+      # P1a: používej jak jsou (rid, r1, r2, ...)
       summary_table$polozka_index
     }
 
