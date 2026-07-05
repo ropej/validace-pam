@@ -83,18 +83,18 @@ pam_1a <- pam_1a_all |>
 
 
 # --- P1c ---
-files_p1c   <- list.files(
+files_1c   <- list.files(
   file.path(path_parquet, "P1c", "parquet"),
   pattern    = "^odd_.*\\.parquet$",
   full.names = TRUE
 )
-pam_p1c_all <- setNames(
-  map(files_p1c, function(f) {
+pam_1c_all <- setNames(
+  map(files_1c, function(f) {
     read_parquet(f) |>
       select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}")) |>
       rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{1}"))
   }),
-  str_match(basename(files_p1c), "^odd_(.+)\\.parquet$")[, 2]
+  str_match(basename(files_1c), "^odd_(.+)\\.parquet$")[, 2]
 )
 
 
@@ -194,7 +194,7 @@ report_pam_1a <- validace_pam(
 # SPUŠTĚNÍ VALIDACE P1c
 # ==============================================================================
 
-report_pam_p1c_all <- imap(pam_p1c_all, function(d, oddil) {
+report_pam_1c_all <- imap(pam_1c_all, function(d, oddil) {
   if (oddil %in% c("0")) return(NULL)
 
   path_out_f <- file.path(
