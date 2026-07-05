@@ -612,9 +612,22 @@ summarise_pam_variables <- function(data, id_cols,
       summary_table$polozka_index
     }
 
+    # Mapování suffixu výkazu (pro polozka_index v labels_clean)
+    suffix_map <- list(
+      "p1"  = ".p1",
+      "1a"  = ".1a",
+      "1b"  = ".1b",
+      "1c"  = ".1c"
+    )
+    vykaz_suffix <- suffix_map[[vykaz]] %||% ""
+
     summary_table <- summary_table |>
-      mutate(label_result = lbl$label_result[match(label_keys, lbl$polozka)]) |>
-      relocate(label_result, .after = polozka_index)
+      mutate(
+        polozka_index_suffix = paste0(label_keys, vykaz_suffix),
+        label_result = lbl$label_result[match(label_keys, lbl$polozka)]
+      ) |>
+      relocate(polozka_index_suffix, .after = polozka_index) |>
+      relocate(label_result, .after = polozka_index_suffix)
   }
 
   summary_table
