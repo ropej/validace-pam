@@ -1391,6 +1391,8 @@ porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
   # porovnávej jen sloupce přítomné v OBOU reportech (jinak by sloupec navíc
   # hlásil neshodu u každé proměnné)
   spolecne <- union("polozka_index", intersect(names(prom_c), names(prom_t)))
+  # Vyloučit pomocné sloupce odvozené z polozka_index
+  spolecne <- setdiff(spolecne, c("polozka_index_suffix"))
   prom_c <- prom_c |> select(any_of(spolecne))
   prom_t <- prom_t |> select(any_of(spolecne))
 
