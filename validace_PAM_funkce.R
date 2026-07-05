@@ -1133,7 +1133,7 @@ write_pam_validation_xlsx <- function(report, path_out) {
     left_join(coverage_wide_cols, by = "polozka_index") |>
     left_join(merene_mesice_col, by = "polozka_index") |>
     select(
-      any_of(c("polozka_index", "typ_promenne", "count_years", "count_mes",
+      any_of(c("polozka_index", "polozka_index_suffix", "typ_promenne", "count_years", "count_mes",
                "frekvence_mereni", "merene_mesice", "na_ratio", "zeros_ratio",
                "is_negative",
                "count_uniques_diff", "min_diff", "max_diff", "diffmean_range",
