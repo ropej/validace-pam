@@ -215,40 +215,60 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 
 Jednotlivé r-proměnné se v parquet souborech a v tabulce `pamvykpol_labels.xlsx` identifikují pomocí kódů (např. `r001`, `r1`, `r01001` atd.), které se liší:
 
-1. **Délkou** – P1-04 má kódy 4-6 znaků (např. `r001`, `r01001`), P1a 2-6 znaků (např. `r1`, `r01001`), P1c 2-3 znaky (např. `r1`, `r2`)
-2. **Suffixem** – parquet soubory obsahují `polozka_index` se suffixem výkazu (např. `r001.p1c`, `r1.1a`), zatímco `pamvykpol_labels.xlsx` má sloupec `polozka_index` s normalizovanými kódy bez těchto suffixů
+1.  **Délkou** – P1-04 má kódy 4-6 znaků (např. `r001`, `r01001`), P1a 2-6 znaků (např. `r1`, `r01001`), P1c 2-3 znaky (např. `r1`, `r2`)
+2.  **Suffixem** – parquet soubory obsahují `polozka_index` se suffixem výkazu (např. `r001.p1c`, `r01001.1a`). Naproti tomu tabulka `pamvykpol_labels.xlsx` obsahuje ve sloupci `polozka` normalizované kódy bez suffixu, případně také sloupec `polozka_index` včetně suffixu.
 
-**Proces mapování:**
+Při mapování labelů proto bylo nutné sjednotit značení proměnných podle konkrétního zdroje a typu výkazu. Zohledněny byly zejména rozdíly v délce kódů mezi výkazy P1-04, P1a a P1c a také přítomnost či nepřítomnost suffixu výkazu.
 
-1. V `validace_PAM.R` se pomocí `rename_with()` **smažou suffixy** `.P*` (`.P04`, `.P1A`, `.P1C` apod.) – tím se normalizují kódy na sjednocenou formu
-2. V `summarise_pam_variables()` se vytváří `polozka_index_suffix` – rekonstruovaný kód s suffixem výkazu, který jednoznačně mapuje na řádek v `pamvykpol_labels.xlsx`:
-   - **P1-04:** `r001` → `r0001.p1` (čtyřmístný kód proměnné s prefixem `0` + suffix `.p1`)
-   - **P1a:** `r1` → `r1.1a` (původní kód + suffix `.1a`)
-   - **P1c:** `r1` → `r101.1c` / `r202.1c` (kód s prefixem oddílu podle indexu: IVa=1, IVb=2, atd., + suffix `.1c`)
+#### **Proces mapování**
 
-3. Pomocí `polozka_index_suffix` se pak provádí `match()` se sloupcem `polozka` v `pamvykpol_labels.xlsx` a načítá se příslušný `label_result`
+Mapování labelů probíhá ve třech krocích:
 
-Tento mechanismus umožňuje, aby stejná r-proměnná (např. `r1`) mohla v různých výkazech a oddílech měla různé popisné štítky.
+1.  **Normalizace názvů proměnných**
+
+    Ve skriptu `validace_PAM.R` jsou pomocí funkce `rename_with()` z názvů proměnných odstraněny suffixy `\\.*$` označující typ výkazu (např. `.P1`, `.1A`, `.1C`). Tím se sjednotí názvy proměnných napříč jednotlivými parquet soubory.
+
+2.  **Vytvoření jednoznačného identifikátoru proměnné napříč výkazy**
+
+    Ve funkci `summarise_pam_variables()` je vytvořena pomocná proměnná `polozka_index_suffix`, která rekonstruuje označení proměnné ve stejném formátu, jaký používá tabulka `pamvykpol_labels.xlsx`.
+
+    Rekonstrukce se liší podle typu výkazu:
+
+    -   **P1-04** – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix `.p1`.\
+        *např.* `r101` → `r01001.p1`
+
+    -   **P1a** – původní kód proměnné je ponechán a pouze je doplněn suffix `.1a`.\
+        *např.* `r010102` → `r010102.1a`
+
+    -   **P1c** – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (`04`, `4a`, `4b`, `4c`, `06`, `08`), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix `.1c`.\
+        *např.* `r01` v oddíle IV → `r04001.1c`, `r01` v oddíle IVa → `r4a001.1c`.\
+        Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. `r601` → `r06001.1c`.
+
+3.  **Mapování labelů**
+
+    Proměnná `polozka_index_suffix` je následně použita pro `match()` se sloupcem `polozka_index` v tabulce `pamvykpol_labels.xlsx`. Na základě nalezené shody je ke každé proměnné přiřazen odpovídající `label_result`, tj. slovní pojmenování proměnné.
+
+Tento mechanismus umožňuje, aby stejná r-proměnná (např. `r01`) mohla v různých výkazech a oddílech mít různé popisné štítky.
 
 ### Detekce frekvence měření {#sec-frekvence}
 
 Frekvence se detekuje automaticky z dat jako modus počtu měřených měsíců za rok (v případě nejednoznačného modu medián):
 
-+----------------------------+---------------------------+
-| Modus měsíců               | Frekvence                 |
-+============================+===========================+
-| 12                         | měsíční                   |
-+----------------------------+---------------------------+
-| 4                          | čtvrtletní                |
-+----------------------------+---------------------------+
-| 2                          | pololetní                 |
-+----------------------------+---------------------------+
-| 1                          | roční                     |
-+----------------------------+---------------------------+
-| ostatní                    | nepravidelná              |
-+----------------------------+---------------------------+
-| `NA`                       | neměřeno                  |
-+----------------------------+---------------------------+
++--------------------------+-------------------------+
+| Modus měsíců             | Frekvence               |
++==========================+=========================+
+| 12                       | měsíční                 |
++--------------------------+-------------------------+
+| 4                        | čtvrtletní              |
++--------------------------+-------------------------+
+| 2                        | pololetní               |
++--------------------------+-------------------------+
+| 1                        | roční                   |
++--------------------------+-------------------------+
+| ostatní                  | nepravidelná            |
++--------------------------+-------------------------+
+| `NA`                     | neměřeno                |
++--------------------------+-------------------------+
 
 Je připuštěna možnost, aby se roční proměnné v různých výkazech mohly vykazovat v různých měsících (nejenom v září, ale např. i v červnu nebo v prosinci). Validace nezpevňuje prosinec jako jediný přípustný měsíc měření. Místo toho z dat zjistí, ve kterém měsíci daná proměnná nejčastěji vykazuje hodnoty (modus přes všechna léta), a ten pak použije jako referenční při kontrole pokrytí – tj. ověří, zda je tento měsíc přítomen v každém roce.
 

@@ -165,7 +165,7 @@ prep_pam_labels <- function(path_labels, r_pattern = "^r\\d{1}") {
     rename(label_result = "zkr") |>
     mutate(label_result = clean_excel_text(label_result)) |>
     filter(!if_all(everything(), is.na)) |>
-    distinct(polozka, .keep_all = TRUE) |>
+    distinct(polozka_index, .keep_all = TRUE) |>
     select(polozka, polozka_index, vykaz, label_result)
 }
 
@@ -594,12 +594,6 @@ summarise_pam_variables <- function(data, id_cols,
   }
 
   if (!is.null(labels_clean)) {
-    vykaz_val <- vykaz
-    lbl <- if (!is.null(vykaz_val) && "vykaz" %in% names(labels_clean))
-      labels_clean |> filter(vykaz == vykaz_val)
-    else
-      labels_clean
-
     label_keys <- if (!is.null(oddil)) {
       code <- oddil_to_code(oddil)
       # P1c: přeměň r1, r2 na r101, r202 apod.
@@ -624,7 +618,7 @@ summarise_pam_variables <- function(data, id_cols,
     summary_table <- summary_table |>
       mutate(
         polozka_index_suffix = paste0(label_keys, vykaz_suffix),
-        label_result = lbl$label_result[match(label_keys, lbl$polozka)]
+        label_result = labels_clean$label_result[match(polozka_index_suffix, labels_clean$polozka_index)]
       ) |>
       relocate(polozka_index_suffix, .after = polozka_index) |>
       relocate(label_result, .after = polozka_index_suffix)
