@@ -123,34 +123,49 @@ Každý výkaz (P1-04, P1a, oddíly P1c) generuje samostatný `.xlsx` soubor se 
 
 Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekcemi se záhlavím, skládajícími se pod sebou:
 
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| Sekce                           | Obsah                                                                                                                                                                                                                             |        |
-+=================================+===================================================================================================================================================================================================================================+========+
-| **Název výkazu**                | Označení výkazu (P1-04, P1a, P1c s oddílem).                                                                                                                                                                                      |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Filtrováno na roky ≤ X**      | Zobrazí se, pokud byl nastaven parametr `max_rok`. Ukazuje, do kterého roku data vstupují do analýzy                                                                                                                              |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Typy proměnných**             | Přehled počtu r-proměnných dle datového typu (`numeric`, `character`, …).                                                                                                                                                         |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Frekvence měření**            | Počet proměnných dle detekované frekvence měření: roční / pololetní / čtvrtletní / měsíční / nepravidelná / neměřeno.                                                                                                             |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Metriky**                     | Tabulka klíčových ukazatelů:                                                                                                                                                                                                      |        |
-|                                 |                                                                                                                                                                                                                                   |        |
-|                                 | -   *Identifikátor zařízení* – sloupec použitý jako identifikátor (`ico`, `red_izo`, `rid`, …).                                                                                                                                   |        |
-|                                 | -   *Počet let* – počet unikátních let v datech.                                                                                                                                                                                  |        |
-|                                 | -   *Počet řádků* – celkový počet řádků v datasetu.                                                                                                                                                                               |        |
-|                                 | -   *Výskyt závažných chyb* – počet proměnných se závažnými chybami ze všech proměnných, a celkový počet \| chyb. Formát: `5 / 16 (3 chyby)` = 5 proměnných z 16 má 3 závažné chyby. Zobrazí se jen pokud \> 0.                   |        |
-|                                 | -   *Výskyt zvláštního chování* – počet proměnných se zvláštním chováním ze všech proměnných, a celkový počet výskytů. Formát: `4 / 16 (2 chyby)` = 4 proměnné z 16 mají 2 výskyty zvláštního chování. Zobrazí se jen pokud \> 0. |        |
-|                                 | -   *Počet záporných proměnných* – proměnné s alespoň jednou zápornou hodnotou.                                                                                                                                                   |        |
-|                                 | -   *Počet nevyplněných identifikátorů* – řádky, kde je identifikátor zařízení prázdný.                                                                                                                                           |        |
-|                                 | -   *Počet prázdných labelů* – proměnné bez namapovaného popisného štítku v `pamvykpol_labels.xlsx`.                                                                                                                              |        |
-|                                 | -   *Existence nekonzistentního měření* – zda alespoň jedna proměnná má nekonzistentní pokrytí.                                                                                                                                   |        |
-|                                 | -   *Existence duplicit* / *Počet duplicit* – zda se ve výkaze vyskytují opakované kombinace klíčových sloupců a v jakém počtu.                                                                                                   |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Příklady duplicit**           | Konkrétní příklady duplicitních řádků (pokud existují).                                                                                                                                                                           |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
-| **Zařízení s nejvíce outlierů** | Top 20 zařízení s alespoň 5 outliery, seřazená sestupně.                                                                                                                                                                          |        |
-+---------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Sekce                           | Obsah                                                                                                                                                                                                                                                                                          |
++=================================+================================================================================================================================================================================================================================================================================================+
+| **Název výkazu**                | Označení výkazu (P1-04, P1a, P1c s oddílem).                                                                                                                                                                                                                                                   |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Report vytvořen**             | Kdy byl report vytvořen.                                                                                                                                                                                                                                                                       |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Filtrováno na roky ≤ X**      | Zobrazí se, pokud byl nastaven parametr `max_rok`. Ukazuje, do kterého roku data vstupují do analýzy                                                                                                                                                                                           |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Typy proměnných**             | Přehled počtu r-proměnných dle datového typu (`numeric`, `character`, …).                                                                                                                                                                                                                      |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Frekvence měření**            | Počet proměnných dle detekované frekvence měření: roční / pololetní / čtvrtletní / měsíční / nepravidelná / neměřeno.                                                                                                                                                                          |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Počet let**                   | Počet unikátních let v datech.                                                                                                                                                                                                                                                                 |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Počet řádků**                 | Celkový počet řádků v datasetu.                                                                                                                                                                                                                                                                |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Identifikátory**              | -   *Identifikátor zařízení* – sloupec použitý jako identifikátor (`ico`, `red_izo`, `rid`, …).                                                                                                                                                                                                |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Identifikátory jedinečných řádků*: Kombinace proměnných, které společně s identifikátorem zařízení a časovou osou jednoznačně určují jednotlivé řádky dat. Tato kombinace slouží ke kontrole duplicity záznamů (např. u výkazu P1c, oddílu IVb: `druh`, `kategorie`, `stupen` a `zdroj`). |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Počet chybejích* <identifikátor> – řádky, ve kterých chybí daný identifikátor zařízení (`ico`, `red_izo`, `rid`).                                                                                                                                                                         |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Kontrola anomálií**           | -   *Výskyt závažných chyb* – počet proměnných se závažnými chybami ze všech proměnných, a celkový počet \| chyb. Formát: `5 / 16 (3 chyby)` = 5 proměnných z 16 má 3 závažné chyby. Zobrazí se jen pokud \> 0.                                                                                |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Výskyt zvláštního chování* – počet proměnných se zvláštním chováním ze všech proměnných, a celkový počet výskytů. Formát: `4 / 16 (2 chyby)` = 4 proměnné z 16 mají 2 výskyty zvláštního chování. Zobrazí se jen pokud \> 0.                                                              |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Počet záporných proměnných* – proměnné s alespoň jednou zápornou hodnotou.                                                                                                                                                                                                                |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Počet prázdných labelů* – proměnné bez namapovaného popisného štítku v `pamvykpol_labels.xlsx`.                                                                                                                                                                                           |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Počet řádků s mes=NA* – počet řádků bez vyplněného měsíce (`mes`).                                                                                                                                                                                                                        |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Existence cyklických nul* – zda byl identifikován měsíc, který ve všech letech obsahuje pouze technicky vykazované nulové hodnoty.                                                                                                                                                        |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Existence nekonzistentního měření* – zda alespoň jedna proměnná má nekonzistentní pokrytí.                                                                                                                                                                                                |
+|                                 |                                                                                                                                                                                                                                                                                                |
+|                                 | -   *Existence duplicit* / *Počet duplicit* – zda se ve výkaze vyskytují opakované kombinace klíčových sloupců a v jakém počtu.                                                                                                                                                                |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Příklady duplicit**           | Konkrétní příklady duplicitních řádků (pokud existují).                                                                                                                                                                                                                                        |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Zařízení s nejvíce outlierů** | Top 20 zařízení s alespoň 5 outliery, seřazená sestupně.                                                                                                                                                                                                                                       |
++---------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ## List „Summary"
 
@@ -160,6 +175,8 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 | Sloupec                      | Význam                                                                                                                                                                                                                                                                                                                           |
 +==============================+==================================================================================================================================================================================================================================================================================================================================+
 | `polozka_index`              | Kód proměnné v datech (např. `r001`, `r01001`, `r1`, `r01`).                                                                                                                                                                                                                                                                     |
++------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| `polozka_index_suffix`       | Unikátní kód každé proměnné včetně suffixu výkazu (např. `r001` z P1-04 se mapuje na `r0001.p1`, `r01001` z P1a na `r01001.1a`, `r01` z P1c-IV na `r04001.1c` atd.).                                                                                                                                                             |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `typ_promenne`               | Datový typ (`numeric`, `character`, …).                                                                                                                                                                                                                                                                                          |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -171,13 +188,15 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `frekvence_mereni`           | Detekovaná frekvence měření: `roční` / `pololetní` / `čtvrtletní` / `měsíční` / `nepravidelná`.                                                                                                                                                                                                                                  |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| `merene_mesice`              | Seznam měsíců, ve kterých byly pro daný rok detekovány nenulové (resp. po odstranění cyklických nul nenahrazené hodnotou `NA`) hodnoty proměnné.                                                                                                                                                                                 |
++------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `na_ratio`                   | Podíl `NA` hodnot v měřených letech (formátováno jako %).                                                                                                                                                                                                                                                                        |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `zeros_ratio`                | Podíl nulových hodnot v měřených letech (formátováno jako %).                                                                                                                                                                                                                                                                    |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `count_uniques`              | Počet unikátních hodnot. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix `_diff`.                                                                                                        |
+| `count_uniques`              | Počet unikátních hodnot. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix `_diff`.                                                                                                        |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `min` / `max`                | Minimum a maximum. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix `_diff`.                                                                                                              |
+| `min` / `max`                | Minimum a maximum. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix `_diff`.                                                                                                              |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `is_negative`                | Logická proměnná: `TRUE` pokud se vyskytují záporné hodnoty.                                                                                                                                                                                                                                                                     |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -192,25 +211,44 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 
 > **Skryté sloupce:** `count_notintegers` (počet neceločíselných hodnot), `outlier_limit_upper` (horní hranice odlehlostí: $Q_3 + 3 \times IQR$) a `outlier_limit_lower` (dolní hranice odlehlostí v diferencích: $Q_1 - 3 \times IQR$; pro roční proměnné prázdné) jsou v listu přítomny, ale skryté – slouží pro vnitřní výpočty.
 
+### Mapování labelů na základě `polozka_index` {#sec-mapovani-labelu}
+
+Jednotlivé r-proměnné se v parquet souborech a v tabulce `pamvykpol_labels.xlsx` identifikují pomocí kódů (např. `r001`, `r1`, `r01001` atd.), které se liší:
+
+1. **Délkou** – P1-04 má kódy 4-6 znaků (např. `r001`, `r01001`), P1a 2-6 znaků (např. `r1`, `r01001`), P1c 2-3 znaky (např. `r1`, `r2`)
+2. **Suffixem** – parquet soubory obsahují `polozka_index` se suffixem výkazu (např. `r001.p1c`, `r1.1a`), zatímco `pamvykpol_labels.xlsx` má sloupec `polozka_index` s normalizovanými kódy bez těchto suffixů
+
+**Proces mapování:**
+
+1. V `validace_PAM.R` se pomocí `rename_with()` **smažou suffixy** `.P*` (`.P04`, `.P1A`, `.P1C` apod.) – tím se normalizují kódy na sjednocenou formu
+2. V `summarise_pam_variables()` se vytváří `polozka_index_suffix` – rekonstruovaný kód s suffixem výkazu, který jednoznačně mapuje na řádek v `pamvykpol_labels.xlsx`:
+   - **P1-04:** `r001` → `r0001.p1` (čtyřmístný kód proměnné s prefixem `0` + suffix `.p1`)
+   - **P1a:** `r1` → `r1.1a` (původní kód + suffix `.1a`)
+   - **P1c:** `r1` → `r101.1c` / `r202.1c` (kód s prefixem oddílu podle indexu: IVa=1, IVb=2, atd., + suffix `.1c`)
+
+3. Pomocí `polozka_index_suffix` se pak provádí `match()` se sloupcem `polozka` v `pamvykpol_labels.xlsx` a načítá se příslušný `label_result`
+
+Tento mechanismus umožňuje, aby stejná r-proměnná (např. `r1`) mohla v různých výkazech a oddílech měla různé popisné štítky.
+
 ### Detekce frekvence měření {#sec-frekvence}
 
 Frekvence se detekuje automaticky z dat jako modus počtu měřených měsíců za rok (v případě nejednoznačného modu medián):
 
-+------------------------------+-----------------------------+
-| Modus měsíců                 | Frekvence                   |
-+==============================+=============================+
-| 12                           | měsíční                     |
-+------------------------------+-----------------------------+
-| 6                            | pololetní                   |
-+------------------------------+-----------------------------+
-| 4                            | čtvrtletní                  |
-+------------------------------+-----------------------------+
-| 1                            | roční                       |
-+------------------------------+-----------------------------+
-| ostatní                      | nepravidelná                |
-+------------------------------+-----------------------------+
-| `NA`                         | neměřeno                    |
-+------------------------------+-----------------------------+
++----------------------------+---------------------------+
+| Modus měsíců               | Frekvence                 |
++============================+===========================+
+| 12                         | měsíční                   |
++----------------------------+---------------------------+
+| 4                          | čtvrtletní                |
++----------------------------+---------------------------+
+| 2                          | pololetní                 |
++----------------------------+---------------------------+
+| 1                          | roční                     |
++----------------------------+---------------------------+
+| ostatní                    | nepravidelná              |
++----------------------------+---------------------------+
+| `NA`                       | neměřeno                  |
++----------------------------+---------------------------+
 
 Je připuštěna možnost, aby se roční proměnné v různých výkazech mohly vykazovat v různých měsících (nejenom v září, ale např. i v červnu nebo v prosinci). Validace nezpevňuje prosinec jako jediný přípustný měsíc měření. Místo toho z dat zjistí, ve kterém měsíci daná proměnná nejčastěji vykazuje hodnoty (modus přes všechna léta), a ten pak použije jako referenční při kontrole pokrytí – tj. ověří, zda je tento měsíc přítomen v každém roce.
 
@@ -313,13 +351,13 @@ Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje v
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | `oddil`              | `NULL`                                                 | Označení oddílu P1c v římské číslici (např. `"IV"`, `"VIII"`). Použito pro správné párování labelů.                   |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `clean_zeros`        | `TRUE`                                                 | Pokud `TRUE`, spustí se detekce a konverze cyklických nul (měsíce 100% nula) na NA před samotnou validací.            |
+| `clean_zeros`        | `TRUE`                                                 | Pokud `TRUE`, spustí se detekce a konverze cyklických nul (měsíce 100% nula) na `NA` před samotnou validací.          |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | `outlier_multiplier` | `3`                                                    | Násobitel IQR pro výpočet prahu odlehlých hodnot ($> Q_3 + 3 \times IQR$, $< Q_1 - 3 \times IQR$).                    |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | `verbose`            | `TRUE`                                                 | Pokud `TRUE`, vypisuje průběh zpracování do konzole.                                                                  |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| `compare_data`       | `FALSE`                                                | Pokud `TRUE`, výstupní report se po zápisu porovná s kontrolní (starší) várkou. Vyžaduje `path_out` i `path_control`. |
+| `compare_data`       | `FALSE`                                                | Pokud `TRUE`, výstupní report se po zápisu porovná s kontrolní (starší) várkou. Vyžaduje `path_out` i `path_control`. |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | `path_control`       | `NULL`                                                 | Složka s kontrolními `.xlsx` reporty, vůči kterým se nová várka porovnává.                                            |
 +----------------------+--------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+
@@ -336,7 +374,7 @@ Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje v
 
 5.  **Kontrola pokrytí měsíců** – pro každý rok: jsou přítomny očekávané měsíce?
 
-6.  **Statistiky proměnných** – `NA` ratio, zeros ratio, min/max, outlier ratio, počet unikátních hodnot (z diferencí nebo raw dle frekvence).
+6.  **Statistiky proměnných** – `NA` ratio, zeros ratio, min/max, outlier ratio, počet unikátních hodnot (z diferencí nebo raw dle frekvence).
 
 7.  **Strange behaviour** – flagy závažnosti a měkkých varování.
 
@@ -462,7 +500,7 @@ Funkce vrací list s těmito prvky:
 
 # Srovnání dvou várek validací {#sec-srovnani-varek}
 
-Při opakovaném zpracování dat (např. nový měsíc / oprava vstupů) je užitečné nový report **porovnat s předchozí várkou** a zjistit, co se změnilo. Srovnávají se vždy **dva uložené `.xlsx` reporty** (kontrolní vs. testovaný), takže se nic nepřepočítává. K dispozici jsou **dva režimy**:
+Při opakovaném zpracování dat (např. nový měsíc / oprava vstupů) je užitečné nový report **porovnat s předchozí várkou** a zjistit, co se změnilo. Srovnávají se vždy **dva uložené `.xlsx` reporty** (kontrolní vs. testovaný), takže se nic nepřepočítává. K dispozici jsou **dva režimy**:
 
 -   **integrovaně při validaci** – `validace_pam(compare_data = TRUE, path_control = …)` po vygenerování reportu rovnou porovná (jeden výkaz);
 -   **dávkově nad hotovými reporty** – `porovnej_pam_varky(path_test, path_control)` porovná celé **dvě složky** najednou, **bez opětovné validace**.
@@ -501,7 +539,7 @@ report_pam$compare$missing_vykaz     # nové/ztracené výkazy (dávkové srovn�
 
 ## Režim 2: dávkové srovnání bez opětovné validace
 
-Funkce `porovnej_pam_varky()` porovná **celé dvě složky** s hotovými reporty – spáruje je podle názvu a vrátí slepené neshody přes všechny výkazy + počty po výkazech (vč. řádku `CELKEM`). Nic se nevaliduje znovu.
+Funkce `porovnej_pam_varky()` porovná **celé dvě složky** s hotovými reporty – spáruje je podle názvu a vrátí slepené neshody přes všechny výkazy + počty po výkazech (vč. řádku `CELKEM`). Nic se nevaliduje znovu.
 
 ``` r
 compare_all <- porovnej_pam_varky(
@@ -526,7 +564,7 @@ Kontrolní report se hledá podle **shodného názvu bez koncovky `_YYMMDD`** (t
 Srovnání má tři části:
 
 -   **`overview_compare`** – metriky z listu „Report overview" (počet let, počet řádků, počet záporných proměnných, existence duplicit, …). Spojí se podle názvu metriky a ponechají se řádky, kde se `value_control` ≠ `value_test`.
--   **`summary_compare`** – porovnání **po proměnných** (`polozka_index`). Listy „Summary" a „Strange behaviour" se z obou reportů spojí podle `polozka_index`, převedou do dlouhého formátu (`polozka_index` × `variable` × `hodnota`) a porovnají po jednotlivých hodnotách. Porovnávají se jen **sloupce přítomné v obou** reportech. Proměnné, které jsou jen v jedné várce, dostanou řádek s `variable = "exist"` a hodnotou *„jen v control" / „jen v test"*.
+-   **`summary_compare`** – porovnání **po proměnných** (`polozka_index`). Listy „Summary" a „Strange behaviour" se z obou reportů spojí podle `polozka_index`, převedou do dlouhého formátu (`polozka_index` × `variable` × `hodnota`) a porovnají po jednotlivých hodnotách. Porovnávají se jen **sloupce přítomné v obou** reportech. Proměnné, které jsou jen v jedné várce, dostanou řádek s `variable = "exist"` a hodnotou *„jen v control" / „jen v test"*.
 -   **`missing_vykaz`** – (jen v `porovnej_pam_varky()`) detekuje výkazy, které jsou jen v `path_test` (nové výkazy) nebo jen v `path_control` (ztracené výkazy). Vrací tibble se sloupci `vykaz` a `status` (*„jen v test"* / *„jen v control"*).
 
 | Sloupec výstupu | Význam                                      |
@@ -585,9 +623,9 @@ Tabulka s neshodami **po proměnných** (z listů „Summary" a „Strange behav
 
 ```{r fig-example-compare-p1c}
 #| echo: false
-#| out-width: "90%"
+#| out-width: "95%"
 #| fig-cap: "Ukázka listu Summary P1c"
-knitr::include_graphics("example_compare_p1c.png")
+knitr::include_graphics("docs/example_compare_p1c.png")
 ```
 
 ## Implementace
@@ -617,7 +655,7 @@ PaM validace (`validace_PAM.R`) a validace datového modelu školy [EduData](htt
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
 | **Kontrola pokrytí měsíců**  | ne                                                     | ano – pro každý rok se ověřuje přítomnost očekávaných měsíců                                                                         |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
-| **Základ statistik**         | raw roční hodnoty                                      | diference pro sub-roční proměnné, raw pro data s roční frekvencí                                                                     |
+| **Základ statistik**         | raw roční hodnoty                                      | diference pro sub-roční proměnné, raw pro data s  roční frekvencí                                                                    |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
 | **Outlier práh**             | $> Q_3 + 1,5 \times IQR$                               | $> Q_3 + 3 \times IQR$ a u sub-ročních dat navíc $< Q_1 - 3 \times IQR$ (benevolentnější práh z důvodu menší variability dat v čase) |
 +------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
