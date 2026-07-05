@@ -20,6 +20,8 @@ format:
       tbl-title: "Tabulka"
     smooth-scroll: true
     code-copy: true
+    output-file: index.html
+    output-dir: docs
 editor: visual
 ---
 
