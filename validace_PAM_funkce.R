@@ -159,15 +159,23 @@ oddil_to_code <- function(oddil) {
 }
 
 prep_pam_labels <- function(path_labels, r_pattern = "^r\\d{1}") {
-  readxl::read_excel(path_labels) |>
-    filter(str_detect(polozka_index, r_pattern)) |>
+  readxl::read_excel(path_labels, col_types = "text") |>
+    filter(str_detect(polozka, r_pattern)) |>
     mutate(across(everything(), as.character)) |>
-    rename(label_result = "zkr") |>
+    mutate(
+      polozka = if_else(typ == "01",
+                        str_replace(polozka, "^r(\\d)(\\d{2})$", "r0\\10\\2"), polozka),
+      typ = recode(typ, "01" = "p1")
+    ) |>
+    rename(label_result = "zkr",
+           polozka_index = "polozka") |>
+    mutate(polozka_index = paste0(polozka_index, ".", typ)) |>
     mutate(label_result = clean_excel_text(label_result)) |>
     filter(!if_all(everything(), is.na)) |>
     distinct(polozka_index, .keep_all = TRUE) |>
-    select(polozka, polozka_index, vykaz, label_result)
+    select(polozka_index, label_result, nazev_oddilu)
 }
+
 
 
 # ------------------------------------------------------------------------------
@@ -238,12 +246,28 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
   stopifnot(all(c("rok", "mes") %in% names(data)))
   r_cols <- names(data)[str_detect(names(data), r_pattern)]
 
+  # Pokud žádné sloupce nematchují pattern, vrať prázdný result
+  if (length(r_cols) == 0) {
+    return(tibble(
+      polozka_index = character(),
+      frekvence_mereni = character(),
+      modus_mesicu_za_rok = integer(),
+      roky_s_merenims = integer(),
+      ocekavane_mesice = list(),
+      nesedici_mesice = character()
+    ))
+  }
+
   long <- data |>
     select(rok, mes, all_of(r_cols)) |>
     pivot_longer(cols = all_of(r_cols),
                  names_to  = "polozka_index",
                  values_to = "hodnota") |>
     mutate(hodnota_num = suppressWarnings(as.numeric(hodnota)))
+
+  # DEBUG: počet proměnných v datech
+  n_vars_in_data <- length(r_cols)
+  message("  [detect_mereni_frequency] r-proměnných v datech: ", n_vars_in_data)
 
   mesice_per_rok <- long |>
     filter(!is.na(hodnota_num)) |>
@@ -259,6 +283,16 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
       .groups = "drop"
     )
 
+  # Měsíce, které se skutečně měří v datech (pro výpočet nesedících měsíců)
+  merene_mesice_raw <- long |>
+    filter(!is.na(hodnota_num)) |>
+    distinct(polozka_index, mes) |>
+    group_by(polozka_index) |>
+    summarise(
+      merene = list(sort(unique(mes))),
+      .groups = "drop"
+    )
+
   freq_summary <- mesice_per_rok |>
     group_by(polozka_index) |>
     summarise(
@@ -271,8 +305,14 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
       .groups = "drop"
     )
 
+  # Přidej všechny r-proměnné, i ty bez měření (mají NA v modus_mesicu_za_rok)
+  all_r_vars <- tibble(polozka_index = r_cols)
+  freq_summary <- all_r_vars |>
+    left_join(freq_summary, by = "polozka_index")
+
   freq_summary |>
     left_join(mes_modus, by = "polozka_index") |>
+    left_join(merene_mesice_raw, by = "polozka_index") |>
     mutate(
       frekvence_mereni = case_when(
         is.na(modus_mesicu_za_rok)  ~ "neměřeno",
@@ -290,10 +330,139 @@ detect_mereni_frequency <- function(data, r_pattern = "^r\\d{3}$") {
           "roční"      = if (is.na(mm)) "12" else mm,
           integer(0)
         )
-      })
+      }),
+      # Nesedící měsíce = symetrická diference: co chybí NEBO co je navíc
+      nesedici_mesice = map2(ocekavane_mesice, merene, function(ochek, merene) {
+        if (is.null(merene) || length(merene) == 0) {
+          # Pokud se neměří vůbec, jsou všechny očekávané měsíce "chybějící"
+          ochek
+        } else {
+          # Symetrická diference
+          unique(c(setdiff(ochek, merene), setdiff(merene, ochek)))
+        }
+      }),
+      # Konvertuj do stringu pro export
+      nesedici_mesice_str = map_chr(nesedici_mesice, ~paste(sort(.x), collapse = ", "))
     ) |>
     select(polozka_index, frekvence_mereni, modus_mesicu_za_rok,
-           roky_s_merenims, ocekavane_mesice)
+           roky_s_merenims, ocekavane_mesice, nesedici_mesice_str) |>
+    rename(nesedici_mesice = nesedici_mesice_str) |>
+    (\(x) {
+      message("  [detect_mereni_frequency] vráceno proměnných: ", nrow(x))
+      x
+    })()
+}
+
+
+# ------------------------------------------------------------------------------
+# 6b. apply_manual_frequency_overrides()
+# Aplikuje ruční přepisy frekvencí z YAML souboru frekvence_manualni_maping.yml
+# na výstup z detect_mereni_frequency()
+#
+# INPUT:  freq_table – výstup z detect_mereni_frequency()
+#         path_yaml – cesta k YAML souboru s manuálními mapováními
+# OUTPUT: tibble s přepsanými frekvencemi a ocekavane_mesice
+# ------------------------------------------------------------------------------
+
+apply_manual_frequency_overrides <- function(freq_table, path_yaml, vykaz = NULL, oddil = NULL) {
+
+  if (!file.exists(path_yaml)) {
+    message("⚠ Soubor ", path_yaml, " neexistuje. Ruční mapování se neaplikuje.")
+    return(list(freq_table = freq_table, n_manual = 0))
+  }
+
+  # Načti YAML
+  manual_config <- yaml::read_yaml(path_yaml)
+
+  # Určí, které sekce YAML použít (filtruje dle vykazu a oddilu)
+  yaml_sections <- names(manual_config)
+  if (!is.null(vykaz)) {
+    # Filtruj sekce podle výkazu: "p1a", "p1c_IV", "p1c_IVa", atd.
+    yaml_sections <- yaml_sections[
+      (yaml_sections == vykaz) |
+      (str_starts(yaml_sections, paste0(vykaz, "_")) &
+       if (is.null(oddil)) TRUE else str_ends(yaml_sections, oddil))
+    ]
+  }
+
+  # Převeď YAML do tibble formátu
+  manual_overrides <- tibble()
+
+  for (vykaz_name in yaml_sections) {
+    vykaz_config <- manual_config[[vykaz_name]]
+
+    if (!is.list(vykaz_config) || length(vykaz_config) == 0) next
+
+    for (r_var in names(vykaz_config)) {
+      var_config <- vykaz_config[[r_var]]
+
+      # POZOR: polozka_index v freq_table NEMÁ suffix, jen "r01", "r02" atd.
+      # Suffixu se přidávají až při spojování s labels_clean
+      manual_overrides <- bind_rows(
+        manual_overrides,
+        tibble(
+          polozka_index = r_var,
+          frekvence_mereni_manual = var_config$frekvence,
+          ocekavane_mesice_manual = var_config$ocekavane_mesice,
+          poznamka_manual = var_config$poznamka %||% ""
+        )
+      )
+    }
+  }
+
+  if (nrow(manual_overrides) == 0) {
+    message("ℹ Žádné ruční přepisy nenalezeny v ", path_yaml)
+    return(list(freq_table = freq_table, n_manual = 0))
+  }
+
+  message("✓ Ruční mapování: ", nrow(manual_overrides), " proměnných")
+  message("  Př.: ", manual_overrides$polozka_index[1], " → ", manual_overrides$frekvence_mereni_manual[1])
+
+  # Aplikuj manuální přepisy
+  # POZOR: r-kódy v freq_table mohou mít součást (r010107 = r01 + 0107)
+  # Matchuj na předponu r-kódu (r01, r1s, r04, atd.)
+  result <- freq_table |>
+    mutate(
+      r_var_prefix = str_extract(polozka_index, "^r\\d{1,2}s?")  # extrahuj r01, r1s, r04 atd.
+    ) |>
+    left_join(
+      manual_overrides |> rename(r_var_prefix = polozka_index),
+      by = "r_var_prefix"
+    ) |>
+    select(-r_var_prefix)
+
+  # Počítej, kolik proměnných má RUČNÍ mapování (bez ohledu zda se frekvence změnila)
+  if ("frekvence_mereni_manual" %in% names(result)) {
+    n_applied <- sum(!is.na(result$frekvence_mereni_manual))
+  } else {
+    n_applied <- 0
+  }
+
+  # Aplikuj přepisy – bez case_when, prostě podmíněná logika
+  result <- result |>
+    mutate(
+      frekvence_mereni = coalesce(frekvence_mereni_manual, frekvence_mereni)
+    )
+
+  # Přepis ocekavane_mesice, když existuje manuální přepis
+  if ("ocekavane_mesice_manual" %in% names(result)) {
+    manual_idxs <- !is.na(result$ocekavane_mesice_manual)
+    if (any(manual_idxs)) {
+      result$ocekavane_mesice[manual_idxs] <- result$ocekavane_mesice_manual[manual_idxs] |>
+        map(~ str_split(.x, ",\\s*", simplify = TRUE) |> as.character() |> str_trim())
+    }
+  } else {
+    message("  ⚠ Sloupec 'ocekavane_mesice_manual' neexistuje!")
+  }
+
+  result <- result |>
+    select(-any_of(c("frekvence_mereni_manual", "ocekavane_mesice_manual", "poznamka_manual")))
+
+  # Vrátit seznam s freq_table a počtem ručních mapování
+  list(
+    freq_table = result,
+    n_manual = n_applied
+  )
 }
 
 
@@ -332,8 +501,7 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
       freq_nepravidelne |>
         select(polozka_index, frekvence_mereni) |>
         crossing(rok = unique(data$rok)) |>
-        mutate(merene_mesice = NA_character_,
-               chybejici_mesice = NA_character_,
+        mutate(nesedici_mesice = NA_character_,
                mereni_ok = NA)
     )
   }
@@ -362,28 +530,26 @@ check_mereni_coverage <- function(data, freq_table, r_pattern = "^r\\d{3}$") {
     left_join(freq_info, by = "polozka_index") |>
     filter(!is.na(frekvence_mereni)) |>
     mutate(
-      chybejici_mesice = map2(ocekavane_mesice, merene_mesice, ~ setdiff(.x, .y)),
-      mereni_ok = map_lgl(chybejici_mesice, ~ length(.x) == 0),
-      merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")),
-      chybejici_mesice = map_chr(chybejici_mesice,
-                                 ~ if (length(.x) == 0) "" else paste(.x, collapse = ","))
+      # Nesedící měsíce = symetrická diference (co chybí NEBO co je navíc)
+      nesedici = map2(ocekavane_mesice, merene_mesice,
+                      ~ unique(c(setdiff(.x, .y), setdiff(.y, .x)))),
+      mereni_ok = map_lgl(nesedici, ~ length(.x) == 0),
+      nesedici_mesice = map_chr(nesedici,
+                                ~ if (length(.x) == 0) "" else paste(sort(.x), collapse = ","))
     ) |>
-    select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
+    select(polozka_index, frekvence_mereni, rok, nesedici_mesice, mereni_ok)
 
-  # Přidat nepravidelné proměnné - převzít merene_mesice z long_all, ale bez kontroly pokrytí
+  # Přidat nepravidelné proměnné - bez kontroly pokrytí (žádné očekávané měsíce)
   if (nrow(freq_nepravidelne) > 0) {
-    nepravidelne_merene <- merene |>
+    coverage_nepravidelne <- merene |>
       filter(polozka_index %in% freq_nepravidelne$polozka_index) |>
-      mutate(merene_mesice = map_chr(merene_mesice, ~ paste(.x, collapse = ",")))
-
-    coverage_nepravidelne <- nepravidelne_merene |>
       left_join(freq_nepravidelne |> select(polozka_index, frekvence_mereni),
                 by = "polozka_index") |>
       mutate(
-        chybejici_mesice = NA_character_,
+        nesedici_mesice = NA_character_,
         mereni_ok = NA
       ) |>
-      select(polozka_index, frekvence_mereni, rok, merene_mesice, chybejici_mesice, mereni_ok)
+      select(polozka_index, frekvence_mereni, rok, nesedici_mesice, mereni_ok)
 
     bind_rows(coverage_kontrolovane, coverage_nepravidelne) |>
       arrange(polozka_index, rok)
@@ -774,16 +940,15 @@ make_pam_examples <- function(data, id_cols, summary_table,
       )
   } else tibble(polozka_index = character(), outliers_per_facility = character())
 
-  # --- inconsistent_mereni: chybějící měsíce per rok ---
+  # --- inconsistent_mereni: nesedící měsíce per rok (co chybí NEBO co je navíc) ---
   inkonz_tbl <- if (!is.null(coverage_table) && nrow(coverage_table) > 0) {
     coverage_table |>
-      filter(!mereni_ok, nchar(chybejici_mesice) > 0) |>
+      filter(!mereni_ok, nchar(nesedici_mesice) > 0) |>
       arrange(polozka_index, rok) |>
       group_by(polozka_index) |>
       summarise(
         inconsistent_mereni = paste(
-          paste0("v roce ", rok, " chybí měsíce ",
-                 str_replace_all(chybejici_mesice, ",", ", ")),
+          paste0("v roce ", rok, ": ", str_replace_all(nesedici_mesice, ",", ", ")),
           collapse = "; "),
         .groups = "drop"
       )
@@ -878,6 +1043,10 @@ write_pam_validation_xlsx <- function(report, path_out) {
   wb <- createWorkbook()
 
   addWorksheet(wb, sheetName = "Report overview")
+
+  # Formátování Report overview: sloupec 1 – bez zalamování
+  addStyle(wb, "Report overview", createStyle(wrapText = FALSE), rows = 1:1000, cols = 1, gridExpand = TRUE)
+
   sec_style <- createStyle(textDecoration = "bold")
 
   # --- předpočítané hodnoty ---
@@ -916,9 +1085,22 @@ write_pam_validation_xlsx <- function(report, path_out) {
                      "existing_label" %in% names(report$strange_behaviour))
     sum(report$strange_behaviour$existing_label %in% FALSE) else NA_integer_
 
-  exist_inkonz <- if (!is.null(report$strange_behaviour) &&
-                      "inconsistent_mereni" %in% names(report$strange_behaviour))
-    any(report$strange_behaviour$inconsistent_mereni, na.rm = TRUE) else NA
+  # Nekonzistentní měření: počet proměnných s nesedícími měsíci alespoň v jednom roce
+  exist_inkonz <- if (!is.null(report$coverage) && nrow(report$coverage) > 0) {
+    vars_with_nesedici <- report$coverage |>
+      filter(!is.na(nesedici_mesice) & nchar(nesedici_mesice) > 0) |>
+      distinct(polozka_index) |>
+      nrow()
+    # Počítej procento ze VŠECH proměnných v summary, ne jen z coverage (kde jsou jen měřené)
+    total_vars <- if (!is.null(report$summary) && nrow(report$summary) > 0)
+      n_distinct(report$summary$polozka_index) else n_distinct(report$coverage$polozka_index)
+    if (vars_with_nesedici > 0) {
+      pct <- round(vars_with_nesedici / total_vars * 100, 1)
+      sprintf("%d (%d.%d %%)", vars_with_nesedici, as.integer(pct), as.integer((pct - as.integer(pct)) * 10))
+    } else {
+      "0"
+    }
+  } else "N/A"
 
   tbl_typy <- if (!is.null(report$summary) && "typ_promenne" %in% names(report$summary))
     report$summary |> count(typ_promenne, name = "n")
@@ -957,6 +1139,30 @@ write_pam_validation_xlsx <- function(report, path_out) {
               startRow = r, colNames = FALSE)
     r <- r + 1L
   }
+
+  # Čištění cyklických nul
+  cyclic_detected <- if (!is.null(report$cyclic_zeros_detected)) report$cyclic_zeros_detected else FALSE
+  cyclic_status <- if (cyclic_detected) "Povoleno" else "Nepovoleno"
+  writeData(wb, "Report overview",
+            tibble(x = paste0("Čištění cyklických nul: ", cyclic_status)),
+            startRow = r, colNames = FALSE)
+  r <- r + 1L
+
+  # Výpočet frekvence: ruční vs automatické
+  if (!is.null(report$freq_table) && nrow(report$freq_table) > 0) {
+    n_manual_freq <- if (!is.null(report$n_manual_freq)) report$n_manual_freq else 0
+    n_total_all_vars <- if (!is.null(report$summary) && nrow(report$summary) > 0)
+      n_distinct(report$summary$polozka_index) else n_distinct(report$freq_table$polozka_index)
+    n_auto_freq <- n_total_all_vars - n_manual_freq
+
+    freq_str <- paste0(n_manual_freq, " ručně, ", n_auto_freq, " automaticky")
+
+    writeData(wb, "Report overview",
+              tibble(x = paste0("Výpočet frekvence proměnných: ", freq_str)),
+              startRow = r, colNames = FALSE)
+    r <- r + 1L
+  }
+
   r <- r + 1L
 
   # Typy proměnných
@@ -1112,11 +1318,14 @@ write_pam_validation_xlsx <- function(report, path_out) {
     tibble(polozka_index = character())
   }
 
-  # Přidat merene_mesice z coverage (distinct)
-  merene_mesice_col <- if (!is.null(report$coverage) && nrow(report$coverage) > 0) {
-    report$coverage |>
-      select(polozka_index, merene_mesice) |>
-      distinct(polozka_index, .keep_all = TRUE)
+  # Přidat ocekavane_mesice z freq_table (očekávané měsíce dle detekované/manuální frekvence)
+  ocekavane_mesice_col <- if (!is.null(report$freq_table) && nrow(report$freq_table) > 0) {
+    report$freq_table |>
+      select(polozka_index, ocekavane_mesice) |>
+      rowwise() |>
+      mutate(ocekavane_mesice_str = paste(ocekavane_mesice, collapse = ", ")) |>
+      select(polozka_index, ocekavane_mesice_str) |>
+      rename(ocekavane_mesice = ocekavane_mesice_str)
   } else {
     tibble(polozka_index = character())
   }
@@ -1125,10 +1334,10 @@ write_pam_validation_xlsx <- function(report, path_out) {
     select(-any_of(c("count_notintegers", "outlier_limit_upper", "outlier_limit_lower",
                      "mereni_ok_ratio", "roky_s_merenims"))) |>
     left_join(coverage_wide_cols, by = "polozka_index") |>
-    left_join(merene_mesice_col, by = "polozka_index") |>
+    left_join(ocekavane_mesice_col, by = "polozka_index") |>
     select(
       any_of(c("polozka_index", "polozka_index_suffix", "typ_promenne", "count_years", "count_mes",
-               "frekvence_mereni", "merene_mesice", "na_ratio", "zeros_ratio",
+               "frekvence_mereni", "ocekavane_mesice", "na_ratio", "zeros_ratio",
                "is_negative",
                "count_uniques_diff", "min_diff", "max_diff", "diffmean_range",
                "outliers_ratio_diff",
@@ -1180,6 +1389,12 @@ write_pam_validation_xlsx <- function(report, path_out) {
   addWorksheet(wb, sheetName = "Example of strange behaviour")
   writeData(wb, "Example of strange behaviour", report$examples)
 
+  # Anomálie – změny frekvence po čištění cyklických nul
+  if (!is.null(report$anomalie_frekvence) && nrow(report$anomalie_frekvence) > 0) {
+    addWorksheet(wb, sheetName = "Anomálie – cyklické nuly")
+    writeData(wb, "Anomálie – cyklické nuly", report$anomalie_frekvence)
+  }
+
   header_style <- createStyle(textDecoration = "bold", wrapText = TRUE,
                               halign = "left", valign = "center")
   right_style  <- createStyle(halign = "right")
@@ -1204,7 +1419,16 @@ write_pam_validation_xlsx <- function(report, path_out) {
     addStyle(wb, sheet, header_style, rows = 1, cols = 1:n_cols, gridExpand = TRUE)
     if (sheet == "Report overview")
       addStyle(wb, sheet, right_style, rows = 1:200, cols = 2, gridExpand = TRUE)
-    setColWidths(wb, sheet, cols = 1:n_cols, widths = col_widths)
+
+    # Nastavení šířky sloupců – speciální případy pro jednotlivé sheety
+    if (sheet == "Report overview") {
+      # Report overview: sloupec 1 = 32 (pevná), zbytek autowidth
+      setColWidths(wb, sheet, cols = 1, widths = 32)
+      if (n_cols > 1)
+        setColWidths(wb, sheet, cols = 2:n_cols, widths = col_widths[2:n_cols])
+    } else {
+      setColWidths(wb, sheet, cols = 1:n_cols, widths = col_widths)
+    }
 
     if (sheet == "Strange behaviour" && n_rows > 1) {
       pct_sb <- which(names(dat) %in% "mereni_ok_ratio")
@@ -1294,13 +1518,14 @@ write_pam_validation_xlsx <- function(report, path_out) {
 # VSTUP:
 #   path_control_xlsx – cesta ke kontrolnímu (staršímu) reportu .xlsx
 #   path_test_xlsx    – cesta k testovanému (novému) reportu .xlsx
+#   vykaz_pattern     – regex pro filtrování dat (např. "p1c_IV" → filtruje jen oddíl IV)
 # VÝSTUP: list
 #   $overview_compare – neshody v metrikách listu "Report overview"
 #   $summary_compare  – neshody po proměnných (polozka_index × sledovaná hodnota)
 #                       z listů "Summary" + "Strange behaviour"
 #   $count_neshod     – počet neshod (overview / summary)
 # ------------------------------------------------------------------------------
-porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
+porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx, vykaz_pattern = NULL) {
 
   # bezpečné načtení listu (prázdný tibble, když list/soubor chybí)
   nacti_list <- function(path, sheet) {
@@ -1310,7 +1535,19 @@ porovnej_pam_reporty <- function(path_control_xlsx, path_test_xlsx) {
 
   # Summary + Strange behaviour spojené podle polozka_index do jedné tabulky
   nacti_promenne <- function(path) {
-    s  <- nacti_list(path, "Summary")
+    # Načti všechny Summary listy (Summary, Summary P1-04, Summary P1a, Summary P1c)
+    summary_sheets <- c("Summary", "Summary P1-04", "Summary P1a", "Summary P1c")
+    s_list <- map_dfr(summary_sheets, ~ {
+      df <- nacti_list(path, .x)
+      if (nrow(df) > 0) df else NULL
+    })
+    s <- if (nrow(s_list) > 0) s_list else tibble(polozka_index = character())
+
+    # Filtruj podle vykaz_pattern, pokud je zadán (relevantní pro P1c s více oddíly)
+    if (!is.null(vykaz_pattern) && "vykaz" %in% names(s)) {
+      s <- s |> filter(str_detect(vykaz, vykaz_pattern))
+    }
+
     sb <- nacti_list(path, "Strange behaviour")
     if (nrow(s) == 0 && nrow(sb) == 0) return(tibble(polozka_index = character()))
     # ze SB zahoď sloupce duplicitní se Summary (count_years, label_result, …) kromě klíče
@@ -1460,11 +1697,11 @@ porovnej_pam_varky <- function(path_test, path_control) {
   if (!dir.exists(path_control)) stop("path_control neexistuje: ", path_control)
 
   bez_zamku <- function(x) x[!str_starts(basename(x), fixed("~$"))]  # vynech dočasné excel zámky
-  test_files <- bez_zamku(list.files(path_test, pattern = "\\.xlsx$",
+  test_files <- bez_zamku(list.files(path_test, pattern = "^p1.*\\.xlsx$",
                                      full.names = TRUE, recursive = TRUE))
-  control_files <- bez_zamku(list.files(path_control, pattern = "\\.xlsx$",
+  control_files <- bez_zamku(list.files(path_control, pattern = "^p1.*\\.xlsx$",
                                         full.names = TRUE, recursive = TRUE))
-  if (length(test_files) == 0) stop("Ve složce 'path_test' nejsou žádné .xlsx reporty.")
+  if (length(test_files) == 0) stop("Ve složce 'path_test' nejsou žádné .xlsx reporty (p1_04, p1a, p1c).")
 
   # Extrahuj steamy (názvy výkazů bez data a bez _validace)
   test_stems <- sub("_validace_\\d{6}\\.xlsx$", "", basename(test_files))
@@ -1472,15 +1709,16 @@ porovnej_pam_varky <- function(path_test, path_control) {
 
   vysledky <- purrr::map(test_files, function(tf) {
     stem <- sub("_validace_\\d{6}\\.xlsx$", "", basename(tf))
+    # Hledej přesný match: stem + "_validace_" + YYMMDD + ".xlsx"
     kand <- bez_zamku(list.files(path_control,
-                                 pattern = paste0("^", stem, ".*\\.xlsx$"),
+                                 pattern = paste0("^", stem, "_validace_\\d{6}\\.xlsx$"),
                                  full.names = TRUE, recursive = TRUE))
     if (length(kand) == 0) {
       message("⚠ '", stem, "': kontrolní report nenalezen – přeskočeno.")
       return(NULL)
     }
     cf <- kand[which.max(file.info(kand)$mtime)]  # nejnovější odpovídající
-    list(vykaz = stem, cmp = porovnej_pam_reporty(cf, tf))
+    list(vykaz = stem, cmp = porovnej_pam_reporty(cf, tf, vykaz_pattern = stem))
   }) |> purrr::compact()
 
   # Nové výkazy (v test ale ne v control)
@@ -1818,6 +2056,14 @@ validace_pam <- function(
 
   log("\n── Krok 2: Detekce frekvence měření ────────────────────────────")
   freq_table <- detect_mereni_frequency(data, r_pattern = r_pattern)
+
+  # Aplikuj ruční přepisy frekvencí z YAML, pokud soubor existuje
+  path_yaml <- "docs/frekvence_manualni_maping.yml"
+  log("Kontroluji ruční mapování: ", path_yaml)
+  manual_result <- apply_manual_frequency_overrides(freq_table, path_yaml, vykaz = vykaz, oddil = oddil)
+  freq_table <- manual_result$freq_table
+  n_manual_freq <- manual_result$n_manual
+
   log(freq_table |> count(frekvence_mereni) |>
         mutate(txt = paste0(frekvence_mereni, ": ", n)) |>
         pull(txt) |> paste(collapse = " | "))
@@ -1912,6 +2158,8 @@ validace_pam <- function(
     }
   })
 
+  # Anomálie neřešíme (per požadavek – zaměřujeme se na nesedící měsíce v coverage)
+
   report <- list(
     overview               = overview,
     freq_table             = freq_table,
@@ -1925,7 +2173,8 @@ validace_pam <- function(
     n_empty_facility_id    = n_empty_facility_id,
     secondary_facilities   = secondary_facilities,
     secondary_empty_counts = secondary_empty_counts,
-    cyclic_zeros_detected  = cyclic_zeros_detected
+    cyclic_zeros_detected  = cyclic_zeros_detected,
+    n_manual_freq          = n_manual_freq
   )
 
   if (!is.null(path_out)) {
@@ -1961,4 +2210,174 @@ validace_pam <- function(
 
   log("\n✓ Validace dokončena.\n")
   invisible(report)
+}
+
+
+# Funkce na detekci anomálií v měření – změna frekvence po detekci cyklických nul
+#-------------------------------------------------
+compare_frequency_before_after <- function(data_cleaned, data_original, labels_clean = NULL, vykaz = NULL) {
+  ## INPUT:
+  ##  data_cleaned: data po clean_cyclic_zeros()
+  ##  data_original: originální data PŘED clean_cyclic_zeros()
+  ##  labels_clean: tabulka s labels (pro label_result)
+  ##  vykaz: název výkazu (pro filtrování v reportu)
+  ## OUTPUT:
+  ##  tibble s anomáliemi: polozka_index, label, frekvence_mereni_pred, ocekavane_mesice_pred,
+  ##                       frekvence_mereni_po, ocekavane_mesice_po, typ_zmeny, doporuceni
+
+  if (nrow(data_original) == 0 || nrow(data_cleaned) == 0) {
+    return(tibble())
+  }
+
+  # Detekce frekvence PŘED a PO
+  freq_before <- detect_mereni_frequency(data_original)
+  freq_after <- detect_mereni_frequency(data_cleaned)
+
+  # Porovnání: jak MĚLO být (ocekavane) vs. co se OPRAVDU měří (merene)
+  anomalie <- full_join(
+    freq_before |> select(polozka_index, frekvence_mereni, ocekavane_mesice, merene_mesice),
+    freq_after |> select(polozka_index, frekvence_mereni, ocekavane_mesice, merene_mesice),
+    by = "polozka_index",
+    suffix = c("_pred", "_po")
+  ) |>
+    mutate(
+      zmena = frekvence_mereni_pred != frekvence_mereni_po |
+              merene_mesice_pred != merene_mesice_po,
+      typ_zmeny = case_when(
+        zmena & !is.na(frekvence_mereni_pred) & !is.na(frekvence_mereni_po) ~
+          paste0(frekvence_mereni_pred, " → ", frekvence_mereni_po),
+        zmena & is.na(frekvence_mereni_pred) ~ "nová (po čištění)",
+        zmena & is.na(frekvence_mereni_po) ~ "ztracená (po čištění)",
+        TRUE ~ "bez změny"
+      )
+    ) |>
+    filter(zmena) |>
+    select(polozka_index, frekvence_mereni_pred, ocekavane_mesice_pred, merene_mesice_pred,
+           frekvence_mereni_po, ocekavane_mesice_po, merene_mesice_po, typ_zmeny)
+
+  # Připoj labels (zkr, label_result)
+  if (!is.null(labels_clean)) {
+    anomalie <- anomalie |>
+      left_join(labels_clean |> select(polozka_index, label_result),
+                by = "polozka_index") |>
+      rename(label = label_result) |>
+      relocate(label, .after = polozka_index)
+  }
+
+  # Přidej doporučení
+  anomalie <- anomalie |>
+    mutate(
+      doporuceni = case_when(
+        typ_zmeny == "bez změny" ~ "OK",
+        frekvence_mereni_pred == "roční" & is.na(frekvence_mereni_po) ~ "⚠ Zvážit ruční mapování",
+        frekvence_mereni_pred != frekvence_mereni_po & !is.na(frekvence_mereni_pred) ~ "⚠ Zvážit ruční mapování",
+        TRUE ~ "Zkontrolovat"
+      )
+    )
+
+  return(anomalie)
+}
+
+
+# ==============================================================================
+# generate_auto_frequency_mapping()
+# Automaticky detekuje frekvence na základě stringů v labels_clean
+# Hledá: "k 31. 3.", "k 30. 6.", "k 30. 9.", "k 31. 12."
+# a vytváří YAML mapovací soubor
+# ==============================================================================
+
+generate_auto_frequency_mapping <- function(labels_clean, path_out_yaml = "docs/frekvence_manualni_maping_autogenerovana.yml") {
+
+  if (!require(yaml, quietly = TRUE)) {
+    warning("Balíček 'yaml' není nainstalován. Instaluji...")
+    install.packages("yaml", quiet = TRUE)
+  }
+
+  # Hledané stringy s odpovídajícími měsíci
+  date_patterns <- tibble(
+    pattern = c("k 31. 3.", "k 30. 6.", "k 30. 9.", "k 31. 12."),
+    mesic = c("03", "06", "09", "12")
+  )
+
+  # Detekuj shody v obou sloupcích
+  result <- labels_clean %>%
+    mutate(
+      # Extrahuj r_prefix a vykaz
+      r_prefix = str_extract(polozka_index, "^r[0-9a-z]+"),
+      vykaz = str_extract(polozka_index, "(?<=\\.).*$"),
+      detected_mesic = NA_character_,
+      label_column = NA_character_
+    )
+
+  # Projdi vzory a hledej shody
+  for (i in seq_len(nrow(date_patterns))) {
+    pattern <- date_patterns$pattern[i]
+    mesic <- date_patterns$mesic[i]
+
+    # Hledej v label_result
+    label_matches <- !is.na(result$label_result) & str_detect(result$label_result, fixed(pattern))
+    result$detected_mesic[label_matches & is.na(result$detected_mesic)] <- mesic
+    result$label_column[label_matches & is.na(result$label_column)] <- "label_result"
+
+    # Hledej v nazev_oddilu
+    oddil_matches <- !is.na(result$nazev_oddilu) & str_detect(result$nazev_oddilu, fixed(pattern))
+    result$detected_mesic[oddil_matches & is.na(result$detected_mesic)] <- mesic
+    result$label_column[oddil_matches & is.na(result$label_column)] <- "nazev_oddilu"
+  }
+
+  # Filtruj na mapované řádky
+  auto_mapped <- result %>%
+    filter(!is.na(detected_mesic)) %>%
+    select(polozka_index, r_prefix, vykaz, label_result, nazev_oddilu, detected_mesic, label_column)
+
+  if (nrow(auto_mapped) == 0) {
+    message("Žádné proměnné nebyly automaticky namapovány.")
+    return(list(
+      auto_mapped = auto_mapped,
+      n_mapped = 0,
+      yaml_saved = FALSE
+    ))
+  }
+
+  # Vytvoř YAML strukturu
+  yaml_list <- list()
+
+  for (vykaz_val in unique(auto_mapped$vykaz)) {
+    vykaz_data <- auto_mapped %>% filter(vykaz == vykaz_val)
+    vykaz_section <- list()
+
+    for (r_prefix_val in unique(vykaz_data$r_prefix)) {
+      r_data <- vykaz_data %>% filter(r_prefix == r_prefix_val)
+
+      # Vezmi první řádek (měl by být jen jeden per r-var per vykaz)
+      row <- r_data[1, ]
+
+      # Mapuj mesic na název měsíce
+      mesic_names <- c("01" = "ledna", "02" = "února", "03" = "března", "04" = "dubna",
+                       "05" = "května", "06" = "června", "07" = "července", "08" = "srpna",
+                       "09" = "září", "10" = "října", "11" = "listopadu", "12" = "prosince")
+      mesic_name <- mesic_names[row$detected_mesic]
+
+      vykaz_section[[r_prefix_val]] <- list(
+        frekvence = "roční",
+        ocekavane_mesice = row$detected_mesic,
+        poznamka = paste0("Stav k poslední den měsíce ", mesic_name, " – měří se jen v ", mesic_name)
+      )
+    }
+
+    yaml_list[[vykaz_val]] <- vykaz_section
+  }
+
+  # Uložit YAML
+  yaml::write_yaml(yaml_list, file = path_out_yaml)
+  message(paste0("✓ Automatické mapování uloženo do: ", path_out_yaml))
+  message(paste0("  Mapováno proměnných: ", nrow(auto_mapped)))
+
+  return(list(
+    auto_mapped = auto_mapped,
+    n_mapped = nrow(auto_mapped),
+    yaml_list = yaml_list,
+    yaml_saved = TRUE,
+    yaml_path = path_out_yaml
+  ))
 }

@@ -1,0 +1,104 @@
+## Metodologie výpočtu frekvence měření {#sec-metodologie-frekvence}
+
+### Algoritmus detekce frekvence {#sec-algoritmus-frekvence}
+
+Detekce frekvence měření probíhá v následujících krocích:
+
+1. **Příprava dat**: Pro každou r-proměnnou a rok se identifikují měsíce s neprázdnými (non-NA) hodnotami. Měsíce bez dat jsou ignorovány.
+
+2. **Počet měřených měsíců za rok**: Pro každou kombinaci (proměnná, rok) se spočítá, v kolika měsících byla data naměřena.
+
+3. **Detekce modu**: Vektor počtů měřených měsíců (po všech rocích) se analyzuje:
+   - **Modus**: nejčastější hodnota počtu měsíců
+   - **Nejednoznačný modus** (více hodnot se stejnou četností): použije se místo toho medián
+   - Výsledkem je `modus_mesicu_za_rok` – očekávaný počet měřených měsíců za rok
+
+4. **Mapování modu na frekvenci**: Dle tabulky v @sec-frekvence se `modus_mesicu_za_rok` mapuje na frekvenci:
+   - 12 měsíců → `měsíční`
+   - 4 měsíce → `čtvrtletní`
+   - 2 měsíce → `pololetní`
+   - 1 měsíc → `roční`
+   - ostatní → `nepravidelná`
+   - žádná data → `neměřeno`
+
+5. **Detekce očekávaných měsíců**: Pro roční proměnné se určí, který měsíc je "očekávaný":
+   - Vezme se modus měsíců za všechna léta (pro danou proměnnou)
+   - Tento měsíc se pak použije jako referenční při ověřování pokrytí
+   - Umožňuje validovat roční měření v různých měsících (září, březen, prosinec, atd.)
+
+6. **Ověření pokrytí**: Pro každý rok se kontroluje, zda jsou dle frekvence očekávané měsíce přítomny:
+   - Výsledkem je `mereni_ok` (TRUE/FALSE)
+   - Seznam `nesedici_mesice` obsahuje měsíce, které by měly být ale nejsou (nebo naopak)
+
+### Ruční mapování frekvence
+
+Pokud automatická detekce selže (např. u malých výkazů s omezeným rozsahem zařízení – P1a, P1c oddíly), je možné frekvenci nastavit ručně prostřednictvím souboru `frekvence_manualni_maping.yml` v adresáři `/docs`.
+
+**Struktura mapovacího souboru:**
+
+```yaml
+<vykaz>:
+  <r_prefix>:
+    frekvence: "<frekvence>"
+    ocekavane_mesice: "<MM>" nebo "<MM>, <MM>, ..."
+    poznamka: "poznámka"
+```
+
+**Příklad pro P1a:**
+
+```yaml
+1a:
+  r01:
+    frekvence: "roční"
+    ocekavane_mesice: "09"
+    poznamka: "Školy se zářím – měří se jen v září"
+  r02:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+    poznamka: "Standardní čtvrtletní měření"
+  r04:
+    frekvence: "roční"
+    ocekavane_mesice: "12"
+    poznamka: "Stav k 31.12. – měří se jen v prosinci"
+```
+
+**Použití:**
+
+- Ruční mapování se aplikuje **po** automatické detekci a **přepíše** její výsledky
+- Počet proměnných s ručním mapováním se uvádí v Report overview v řádku "Výpočet frekvence proměnných"
+- Pokud se soubor nenajde v `/docs`, vrátí se 0 ručních mapování a všechny proměnné jsou detekované automaticky
+
+### Automatické generování mapovací tabulky
+
+Pro usnadnění tvorby ruční mapovací tabulky je dostupná funkce `generate_auto_frequency_mapping()`, která:
+
+1. Analyzuje textové popisy proměnných v sloupcích `label_result` a `nazev_oddilu`
+2. Hledá klíčové stringy indikující měsíc měření:
+   - `"k 31. 3."` → měsíc březen (03)
+   - `"k 30. 6."` → měsíc červen (06)
+   - `"k 30. 9."` → měsíc září (09)
+   - `"k 31. 12."` → měsíc prosinec (12)
+3. Pro detekované proměnné vytváří záznam s frekvencí `roční` a příslušným měsícem
+4. Exportuje výsledky do souboru `frekvence_manualni_maping_autogenerovana.yml`
+
+Generovaný soubor slouží jako šablona – lze jej doplnit, upravit a přejmenovat na `frekvence_manualni_maping.yml` pro skutečné použití.
+
+### Detekce nesedících měsíců
+
+"Nesedící měsíce" jsou měsíce, které se **měří** v datech, ale **neměly by** se měřit dle frekvence, nebo naopak – měly by se měřit, ale nejsou přítomny.
+
+**Detekce pomocí symetrické diference:**
+
+$$\text{nesedici\_mesice} = (\text{ocekavane} \setminus \text{merenene}) \cup (\text{merenene} \setminus \text{ocekavane})$$
+
+Kde:
+- $\text{ocekavane}$ = měsíce určené frekvencí (např. pro čtvrtletní: 03, 06, 09, 12)
+- $\text{merenene}$ = měsíce skutečně přítomné v datech (non-NA hodnoty)
+
+**Příklad:** Čtvrtletní proměnná s očekávanými měsíci [03, 06, 09, 12] má v roce 2023 měřené měsíce [03, 04, 06, 09, 12].
+
+- Chybějící měsíce: 12 (měl by být, ale není)
+- Přebývající měsíce: 04 (neměl by být, ale je)
+- **Nesedící měsíce: [04, 12]** (nebo v lidštině: "04, 12")
+
+**Zobrazení:** Nesedící měsíce se zobrazují ve sloupci `nesedici_mesice` v listu "Strange behaviour" jako čtené seznamy měsíců pro každý rok, kde ke chybí konzistence.

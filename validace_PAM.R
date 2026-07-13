@@ -8,6 +8,7 @@ library(tidyr)
 library(purrr)
 library(readxl)
 library(openxlsx)
+library(yaml)
 
 setwd("C:/Users/pejcalovar/OneDrive - MSMT/Analytický útvar - KA 4 - Vybudování datové základny - 7. Datový model školy/Datový model – navazující analýzy/Validace PAM r-kových proměnných")
 
@@ -28,7 +29,7 @@ path_parquet <- file.path(
 )
 
 path_labels <- file.path(
-  base_path, "Datový model – metadata/PaM/pamvykpol_labels.xlsx"
+  base_path, "_WIP/PaM/vykpol_new.xlsx"
 )
 
 path_out_dir <- file.path(
@@ -104,6 +105,12 @@ pam_1c_all <- setNames(
 
 labels_clean <- prep_pam_labels(path_labels)
 
+# Vygeneruj automatickou mapovací tabulku na základě stringů v labels_clean
+auto_freq_mapping <- generate_auto_frequency_mapping(
+  labels_clean = labels_clean,
+  path_out_yaml = "docs/frekvence_manualni_maping_autogenerovana.yml"
+)
+
 
 # ==============================================================================
 # SPUŠTĚNÍ VALIDACE P1-04
@@ -120,7 +127,7 @@ report_pam_1_04 <- validace_pam(
   path_out     = path_out_pam_1_04,
   id_cols      = intersect(id_cols, names(pam_1_04)),
   facility_id  = "ico",
-  max_rok      = 2024,
+  max_rok      = 2025,
   vykaz        = "p1"
 )
 
@@ -186,7 +193,7 @@ report_pam_1a <- validace_pam(
   id_cols      = intersect(id_cols, names(pam_1a)),
   facility_id  = "rid",
   r_pattern    = "^r\\d{1}",
-  max_rok      = 2024,
+  max_rok      = 2025,
   vykaz        = "1a"
 )
 
@@ -209,7 +216,7 @@ report_pam_1c_all <- imap(pam_1c_all, function(d, oddil) {
     id_cols      = intersect(id_cols, names(d)),
     facility_id  = "ico",
     r_pattern    = "^r\\d{1}",
-    max_rok      = 2024,
+    max_rok      = 2025,
     vykaz        = "1c",
     oddil        = oddil
   )

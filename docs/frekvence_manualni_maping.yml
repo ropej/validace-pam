@@ -1,0 +1,83 @@
+# Ruční mapování frekvencí měření pro PAM r-kové proměnné
+# =========================================================
+#
+# Použití: Pokud se frekvence měření proměnné špatně detekuje (zejména u výkazů
+# s omezeným rozsahem zařízení, např. P1a, P1c s konkrétními oddíly), zde se
+# definuje očekávaná/správná frekvence.
+#
+# Formát:
+#   vykaz:
+#     r-prefix:
+#       frekvence: "měsíční" | "čtvrtletní" | "pololetní" | "roční" | "neměřeno"
+#       ocekavane_mesice: "MM" nebo "MM, MM, MM" (měsíce co BY se měly měřit dle metodiky)
+#       poznamka: "důvod tohoto mapování"
+#
+# Příklad - P1a:
+#   1a:
+#     r01:
+#       frekvence: "roční"
+#       ocekavane_mesice: "09"
+#       poznamka: "Pouze školy se zářím – měří se jen v září"
+
+# P1a – P1-04 s omezením na P1a data
+1a:
+  r01:
+    frekvence: "roční"
+    ocekavane_mesice: "09"
+    poznamka: "Školy se zářím – měří se jen v září"
+
+  r1s:
+    frekvence: "roční"
+    ocekavane_mesice: "09"
+    poznamka: "Školy se zářím – měří se jen v září"
+
+  r04:
+    frekvence: "roční"
+    ocekavane_mesice: "12"
+    poznamka: "Stav k 31.12. – měří se jen v prosinci"
+
+  r4s:
+    frekvence: "roční"
+    ocekavane_mesice: "12"
+    poznamka: "Stav k 31.12. – měří se jen v prosinci"
+
+  r02:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r2s:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r03:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r3s:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r05:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r5s:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+  r06:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+
+
+# P1c – oddíl IV (Speciální vzdělávání)
+# (prozatím prázdné – doplnit dle potřeby)
+
+# P1c – oddíl IVa
+# (prozatím prázdné – doplnit dle potřeby)
+
+# P1c – oddíl VI
+# (prozatím prázdné – doplnit dle potřeby)
+
+# P1c – oddíl VIII
+# (prozatím prázdné – doplnit dle potřeby)
