@@ -81,13 +81,13 @@ Všechny výkazy sdílejí společný vektor ID sloupců `c("rok", "mes", "hosp_
 -   **P1a**: `rok`, `mes`, `hosp_druh`, `plat_rad` (bez `druh_pam`)
 -   **P1c**: `rok`, `druh`
 
-Labely (popisné štítky) proměnných se načítají ze souboru `pamvykpol_labels.xlsx`.
+Labely (popisné štítky) proměnných se načítají ze souboru `vykpol_new.xlsx`.
 
 ## Specifika jednotlivých výkazů
 
 ### P1-04
 
-Výkaz se středně velkým počtem proměnných s převážně čtvrtletní frekvencí. Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Kód proměnné v datech (např. `r136`) se před spárováním s labely transformuje do formátu `pamvykpol_labels.xlsx` (např. `r01036.p1`). Frekvence měření se detekuje automaticky – všechny proměnné jsou čtvrtletní, statistiky se počítají z mezikvartálních diferencí.
+Výkaz se středně velkým počtem proměnných s převážně čtvrtletní frekvencí. Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Kód proměnné v datech (např. `r136`) se před spárováním s labely transformuje do formátu `vykpol_new.xlsx` (např. `r01036.p1`). Frekvence měření se detekuje automaticky – všechny proměnné jsou čtvrtletní, statistiky se počítají z mezikvartálních diferencí.
 
 ### P1a
 
@@ -134,13 +134,13 @@ Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekc
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Filtrováno na roky ≤ Y**       | Zobrazí se, pokud byl nastaven parametr `max_rok`. Ukazuje, do kterého roku data vstupují do analýzy                                                                                                                                                                                           |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| **Čištění cyklických nul**       | Zda byla detekce cyklických nul povolena ve funkci `validace_pam()`                                                                                                                                                                                                                            |
+| **Čištění cyklických nul**       | Zda bylo při volání funkce `validace_pam()` povoleno čištění cyklických nul. Mechanismus detekce a čištění cyklických nul je podrobně popsán v @sec-cycling-zeros.                                                                                                                             |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Výpočet frekvence proměnných** | Uvádí počet proměnných, u nichž byla frekvence měření určena automaticky na základě dat, a počet proměnných, jejichž frekvence byla převzata z manuální mapovací tabulky `frekvence_manualni_maping.yml`                                                                                       |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Typy proměnných**              | Přehled počtu r-proměnných dle datového typu (`numeric`, `character`, …).                                                                                                                                                                                                                      |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| **Frekvence měření**             | Počet proměnných dle detekované frekvence měření: roční / pololetní / čtvrtletní / měsíční / nepravidelná / neměřeno.                                                                                                                                                                          |
+| **Frekvence měření**             | Počet proměnných dle detekované frekvence měření: `roční` / `pololetní` / `čtvrtletní` / `měsíční` / `nepravidelná` / `neměřeno` dle mechanismu popsaném v @sec-frekvence.                                                                                                                     |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Počet let**                    | Počet unikátních let v datech.                                                                                                                                                                                                                                                                 |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -158,7 +158,7 @@ Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekc
 |                                  |                                                                                                                                                                                                                                                                                                |
 |                                  | -   *Počet záporných proměnných* – proměnné s alespoň jednou zápornou hodnotou.                                                                                                                                                                                                                |
 |                                  |                                                                                                                                                                                                                                                                                                |
-|                                  | -   *Počet prázdných labelů* – proměnné bez namapovaného popisného štítku v `pamvykpol_labels.xlsx`.                                                                                                                                                                                           |
+|                                  | -   *Počet prázdných labelů* – proměnné bez namapovaného popisného štítku v `vykpol_new.xlsx`.                                                                                                                                                                                                 |
 |                                  |                                                                                                                                                                                                                                                                                                |
 |                                  | -   *Počet řádků s mes=NA* – počet řádků bez vyplněného měsíce (`mes`).                                                                                                                                                                                                                        |
 |                                  |                                                                                                                                                                                                                                                                                                |
@@ -192,7 +192,7 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `modus_mesicu_za_rok`        | Nejčastější počet měřených měsíců za rok (modus). Pokud není modus jednoznačný (více hodnot se vyskytuje se stejnou nejvyšší četností), použije se medián. Základ pro detekci frekvence měření.                                                                                                                                  |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `frekvence_mereni`           | Detekovaná frekvence měření: `roční` / `pololetní` / `čtvrtletní` / `měsíční` / `nepravidelná`.                                                                                                                                                                                                                                  |
+| `frekvence_mereni`           | Detekovaná frekvence měření: `roční` / `pololetní` / `čtvrtletní` / `měsíční` / `nepravidelná` dle mechanismu popsaném v @sec-frekvence.                                                                                                                                                                                         |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `merene_mesice`              | Seznam měsíců, ve kterých byly pro daný rok detekovány nenulové (resp. po odstranění cyklických nul nenahrazené hodnotou `NA`) hodnoty proměnné.                                                                                                                                                                                 |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -208,7 +208,7 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `outliers_ratio`             | Podíl odlehlých hodnot (formátováno jako %). Za odlehlé jsou považovány hodnoty překračující práh $> Q_3 + 3 \times IQR$. U sub-ročních proměnných se sleduje i dolní mez $< Q_1 - 3 \times IQR$. Horní mez se počítá z nenulových a neprázdných hodnot, dolní mez ze všech neprázdných hodnot (nula v diferenci = žádná změna). |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `label_result`               | Popisný štítek proměnné namapovaný z `pamvykpol_labels.xlsx`.                                                                                                                                                                                                                                                                    |
+| `label_result`               | Popisný štítek proměnné namapovaný z `vykpol_new.xlsx`.                                                                                                                                                                                                                                                                          |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `first_year` / `last_year`   | První a poslední rok, ve kterém má proměnná neprázdná data.                                                                                                                                                                                                                                                                      |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -216,74 +216,6 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 > **Skryté sloupce:** `count_notintegers` (počet neceločíselných hodnot), `outlier_limit_upper` (horní hranice odlehlostí: $Q_3 + 3 \times IQR$) a `outlier_limit_lower` (dolní hranice odlehlostí v diferencích: $Q_1 - 3 \times IQR$; pro roční proměnné prázdné) jsou v listu přítomny, ale skryté – slouží pro vnitřní výpočty.
-
-### Mapování labelů na základě `polozka_index` {#sec-mapovani-labelu}
-
-Jednotlivé r-proměnné se v parquet souborech a v tabulce `pamvykpol_labels.xlsx` identifikují pomocí kódů (např. `r102`, `r01`, `r010102` atd.), které se liší:
-
-1.  **Délkou a strukturou kódu** – P1-04 používá čtyřznakové kódy (např. `r102`, `r391`), P1a sedmiznakové kódy (např. `r010102`, `r5s0905`) a P1c tří- až čtyřznakové kódy (např. v oddílech IV a VIII `r01`, `r16`, v oddílu VI `r602`).
-2.  **Suffixem** – parquet soubory obsahují `polozka_index` se suffixem výkazu (např. `r01.P1C`, `r010102.P1A`). Naproti tomu tabulka `pamvykpol_labels.xlsx` obsahuje ve sloupci `polozka` normalizované kódy bez suffixu, případně také sloupec `polozka_index` včetně suffixu.
-
-Při mapování labelů proto bylo nutné sjednotit značení proměnných podle konkrétního zdrojetypu výkazu. Zohledněny byly zejména rozdíly v délce kódů mezi výkazy P1-04, P1a, P1c a také přítomnost či nepřítomnost suffixu výkazu.
-
-#### **Proces mapování**
-
-Mapování labelů probíhá ve třech krocích:
-
-1.  **Normalizace názvů proměnných**
-
-    Ve skriptu `validace_PAM.R` jsou pomocí `rename_with()` nejprve odstraněny původní suffixy `\\.P.*$` z parquet souborů, např. `.P1`, `.P1A`, `.P1C`. Tím vznikne základní normalizovaný kód proměnné.
-
-2.  **Vytvoření jednoznačného identifikátoru proměnné napříč výkazy**
-
-    Pro samotné mapování labelů je ve funkci `summarise_pam_variables()` vytvořena pomocná proměnná `polozka_index_suffix`, která převádí identifikátory proměnných do formátu používaného v tabulce `pamvykpol_labels.xlsx`, včetně suffixů označujících typ výkazu (např. `.p1`, `.1a`, `.1b`, `.1c`).
-
-    Rekonstrukce se liší podle typu výkazu:
-
-    -   **P1-04** – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix `.p1`.\
-        *např.* `r101` → `r01001.p1`
-
-    -   **P1a** – původní kód proměnné je ponechán a pouze je doplněn suffix `.1a`.\
-        *např.* `r010102` → `r010102.1a`
-
-    -   **P1c** – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (`04`, `4a`, `4b`, `4c`, `06`, `08`), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix `.1c`.\
-        *např.* `r01` v oddíle IV → `r04001.1c`, `r01` v oddíle IVa → `r4a001.1c`.\
-        Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. `r601` → `r06001.1c`.
-
-3.  **Mapování labelů**
-
-    Proměnná `polozka_index_suffix` je následně použita pro `match()` se sloupcem `polozka_index` v tabulce `pamvykpol_labels.xlsx`. Na základě nalezené shody je ke každé proměnné přiřazen odpovídající `label_result`, tj. slovní pojmenování proměnné.
-
-Tento mechanismus umožňuje, aby stejná r-proměnná (např. `r01`) mohla v různých výkazech a oddílech mít různé popisné štítky.
-
-### Detekce frekvence měření {#sec-frekvence}
-
-Frekvence se detekuje automaticky z dat jako modus počtu měřených měsíců za rok (v případě nejednoznačného modu medián):
-
-+-------------------------+------------------------+
-| Modus měsíců            | Frekvence              |
-+=========================+========================+
-| 12                      | měsíční                |
-+-------------------------+------------------------+
-| 4                       | čtvrtletní             |
-+-------------------------+------------------------+
-| 2                       | pololetní              |
-+-------------------------+------------------------+
-| 1                       | roční                  |
-+-------------------------+------------------------+
-| ostatní                 | nepravidelná           |
-+-------------------------+------------------------+
-| `NA`                    | neměřeno               |
-+-------------------------+------------------------+
-
-Je připuštěna možnost, aby se roční proměnné v různých výkazech mohly vykazovat v různých měsících (nejenom v září, ale např. i v červnu nebo v prosinci). Validace nezpevňuje prosinec jako jediný přípustný měsíc měření. Místo toho z dat zjistí, ve kterém měsíci daná proměnná nejčastěji vykazuje hodnoty (modus přes všechna léta), a ten pak použije jako referenční při kontrole pokrytí – tj. ověří, zda je tento měsíc přítomen v každém roce.
-
-Zároveň ještě před samotnou validací probíhá detekce cyklických nul. Kontroluje se, zda některý měsíc napříč všemi roky obsahuje pouze nulové hodnoty. V takovém případě se předpokládá, že se daná proměnná v tomto měsíci reálně neměří a do dat se pouze technicky přepisují nuly. Tyto cyklické nuly jsou proto funkcí `clean_cyclic_zeros()` převedeny na `NA`, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky.
-{{< include docs/metodika-frekvence.qmd >}}
-
-### Statistiky z diferencí vs. raw hodnot
-
-Pro proměnné s **sub-roční frekvencí** (měsíční, čtvrtletní, pololetní) se `count_uniques`, `min`, `max` a `outliers_ratio` počítají z **diferencí** mezi po sobě jdoucími hodnotami – lépe zachytí skokové změny a anomálie v průběhu roku. Pro **roční** proměnné se počítají z **raw hodnot**.
 
 ## List „Strange behaviour"
 
@@ -294,7 +226,7 @@ Každý řádek odpovídá jedné proměnné, seřazeno sestupně dle závažnos
 +==============================+================================================================================================================+=======================+
 | `polozka_index`              | Kód proměnné.                                                                                                  | –                     |
 +------------------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+
-| `label_result`               | Popisný štítek, pokud se podařil namapovat z `pamvykpol_labels.xlsx`.                                          | neprázdné             |
+| `label_result`               | Popisný štítek, pokud se podařil namapovat z `vykpol_new.xlsx`.                                                | neprázdné             |
 +------------------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+
 | `frekvence_mereni`           | Detekovaná frekvence měření dle mechanismu popsaném v @sec-frekvence.                                          | jiná než nepravidelná |
 +------------------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+
@@ -411,7 +343,176 @@ Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje 
 
 10. **Srovnání s kontrolní várkou** (volitelné, jen při `compare_data = TRUE`) – nový report se porovná se starší várkou a do výstupu se přidá prvek `$compare` (viz [Srovnání dvou várek validací](#sec-srovnani-varek)).
 
-## Příklad použití – jednotlivé výkazy
+## Mapování labelů na základě `polozka_index`
+
+Jednotlivé r-proměnné se v parquet souborech a v tabulce `vykpol_new.xlsx` identifikují pomocí kódů (např. `r102`, `r01`, `r010102` atd.), které se liší:
+
+1.  **Délkou a strukturou kódu** – P1-04 používá čtyřznakové kódy (např. `r102`, `r391`), P1a sedmiznakové kódy (např. `r010102`, `r5s0905`) a P1c tří- až čtyřznakové kódy (např. v oddílech IV a VIII `r01`, `r16`, v oddílu VI `r602`).
+2.  **Suffixem** – parquet soubory obsahují `polozka_index` se suffixem výkazu (např. `r01.P1C`, `r010102.P1A`). Naproti tomu tabulka `vykpol_new.xlsx` obsahuje ve sloupci `polozka` normalizované kódy bez suffixu, případně také sloupec `polozka_index` včetně suffixu.
+
+Při mapování labelů proto bylo nutné sjednotit značení proměnných podle konkrétního zdrojetypu výkazu. Zohledněny byly zejména rozdíly v délce kódů mezi výkazy P1-04, P1a, P1c a také přítomnost či nepřítomnost suffixu výkazu.
+
+### Proces mapování
+
+Mapování labelů probíhá ve třech krocích:
+
+1.  **Normalizace názvů proměnných**
+
+    Ve skriptu `validace_PAM.R` jsou pomocí `rename_with()` nejprve odstraněny původní suffixy `\\.P.*$` z parquet souborů, např. `.P1`, `.P1A`, `.P1C`. Tím vznikne základní normalizovaný kód proměnné.
+
+2.  **Vytvoření jednoznačného identifikátoru proměnné napříč výkazy**
+
+    Pro samotné mapování labelů je ve funkci `summarise_pam_variables()` vytvořena pomocná proměnná `polozka_index_suffix`, která převádí identifikátory proměnných do formátu používaného v tabulce `vykpol_new.xlsx`, včetně suffixů označujících typ výkazu (např. `.p1`, `.1a`, `.1b`, `.1c`).
+
+    Rekonstrukce se liší podle typu výkazu:
+
+    -   **P1-04** – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix `.p1`.\
+        *např.* `r101` → `r01001.p1`
+
+    -   **P1a** – původní kód proměnné je ponechán a pouze je doplněn suffix `.1a`.\
+        *např.* `r010102` → `r010102.1a`
+
+    -   **P1c** – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (`04`, `4a`, `4b`, `4c`, `06`, `08`), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix `.1c`.\
+        *např.* `r01` v oddíle IV → `r04001.1c`, `r01` v oddíle IVa → `r4a001.1c`.\
+        Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. `r601` → `r06001.1c`.
+
+3.  **Mapování labelů**
+
+    Proměnná `polozka_index_suffix` je následně použita pro `match()` se sloupcem `polozka_index` v tabulce `vykpol_new.xlsx`. Na základě nalezené shody je ke každé proměnné přiřazen odpovídající `label_result`, tj. slovní pojmenování proměnné.
+
+Tento mechanismus umožňuje, aby stejná r-proměnná (např. `r01`) mohla v různých výkazech a oddílech mít různé popisné štítky.
+
+## Detekce frekvence měření {#sec-frekvence}
+
+Frekvence měření je standardně určována automaticky přímo z dat. Pro každou proměnnou se analyzuje počet měsíců, ve kterých byla v jednotlivých letech zaznamenána nenulová hodnota, a z těchto počtů se určí nejčastější hodnota (**modus**). Pokud je modus nejednoznačný (více hodnot se stejnou četností), použije se **medián**.
+
+| Modus měsíců | Frekvence    |
+|--------------|--------------|
+| 12           | měsíční      |
+| 4            | čtvrtletní   |
+| 2            | pololetní    |
+| 1            | roční        |
+| ostatní      | nepravidelná |
+| `NA`         | neměřeno     |
+
+: Mapování modus měsíců na frekvenci měření {#tbl-frekvence-mereni}
+
+### Cyklické nuly {#sec-cycling-zeros}
+
+Ještě před výpočtem frekvence může proběhnout volitelné čištění cyklických nul (argument `clean_zeros = TRUE`).
+
+Pokud některý měsíc obsahuje u dané proměnné napříč všemi roky výhradně nulové hodnoty (100 % nul), předpokládá se, že se v tomto měsíci proměnná ve skutečnosti nesbírá a nuly jsou pouze technickým artefaktem. Funkce `clean_cyclic_zeros()` proto tyto hodnoty převádí na `NA`, aby neovlivňovaly odhad frekvence ani následné statistiky.
+
+Čištění se neprovádí u proměnných s roční frekvencí (např. výkazy P1c).
+
+### Očekávané měsíce měření
+
+U ročních proměnných validace nepředpokládá, že se data musí vykazovat pouze v prosinci. Některé výkazy jsou vyplňovány například v červnu nebo září. Proto se referenční měsíc určuje automaticky jako **modus skutečných měsíců měření napříč všemi roky**. Tento měsíc je následně použit při kontrole pokrytí jednotlivých let.
+
+### Algoritmus detekce frekvence
+
+1.  Pro každou proměnnou a rok se určí měsíce obsahující neprázdná (`non-NA`) data.
+2.  Spočítá se počet měřených měsíců v každém roce.
+3.  Z těchto hodnot se určí modus (případně medián).
+4.  Počet měsíců se převede na frekvenci podle [tabulky](#tbl-frekvence-mereni).
+5.  Určí se očekávané měsíce měření.
+6.  Ověří se, zda jsou očekávané měsíce přítomny ve všech letech.
+
+Výsledkem jsou mimo jiné proměnné:
+
+-   `frekvence_mereni`
+-   `ocekavane_mesice`
+-   `mereni_ok`
+-   `nesedici_mesice`
+
+### Ruční mapování frekvence
+
+V některých výkazech (zejména menších oddílech P1a nebo P1c) nemusí být automatická detekce dostatečně spolehlivá. Frekvenci lze proto přepsat pomocí souboru `frekvence_manualni_maping.yml` umístěného v adresáři `/docs`.
+
+**Struktura mapovacího souboru:**
+
+``` yaml
+<vykaz>:
+  <r_prefix>:
+    frekvence: "<frekvence>"
+    ocekavane_mesice: "<MM>" nebo "<MM>, <MM>, ..."
+    poznamka: "poznámka"
+```
+
+**Příklad pro P1a:**
+
+``` yaml
+1a:
+  r01:
+    frekvence: "roční"
+    ocekavane_mesice: "09"
+    poznamka: "Školy se zářím - měří se jen v září"
+  r02:
+    frekvence: "čtvrtletní"
+    ocekavane_mesice: "03, 06, 09, 12"
+    poznamka: "Standardní čtvrtletní měření"
+  r04:
+    frekvence: "roční"
+    ocekavane_mesice: "12"
+    poznamka: "Stav k 31.12. - měří se jen v prosinci"
+```
+
+Automaticky vypočtené hodnoty se načtou jako první a případné záznamy v mapovacím souboru je následně přepíší.
+
+V přehledu **Report overview** je uvedeno:
+
+-   počet automaticky detekovaných proměnných,
+-   počet proměnných převzatých z ruční mapovací tabulky.
+
+Pokud soubor neexistuje, jsou všechny proměnné určeny automaticky.
+
+### Automatické vytvoření mapovací tabulky pro roční data
+
+Pro usnadnění tvorby ruční mapovací tabulky je k dispozici funkce `generate_auto_frequency_mapping()`, která na základě textových popisů proměnných (`label_result`, `nazev_oddilu`) ze souboru `vykpol_new.xlsx` vytvoří návrh mapování.
+
+Funkce vyhledává klíčové textové řetězce označující měsíc vykazování:
+
+-   `k 31. 3.` → měsíc březen (`03`)
+-   `k 30. 6.` → měsíc červen (`06`)
+-   `k 30. 9.` → měsíc září (`09`)
+-   `k 31. 12.` → měsíc prosinec (`12`)
+
+U nalezených proměnných automaticky nastaví **roční frekvenci** a odpovídající **očekávaný** **měsíc měření**.
+
+Pokud mají všechny proměnné v rámci jednoho oddílu (např. všechny proměnné `r01xxx` v I. oddíle konkrétního výkazu) stejnou detekovanou frekvenci i očekávaný měsíc měření, funkce je sloučí do jediného záznamu reprezentovaného prefixem oddílu (např. `r01`). V konzoli přitom vypisuje informační zprávy, například:
+
+> Agregováno: `r01` (bylo 204 proměnných)
+
+Výsledná mapovací tabulka je díky tomu výrazně kratší a přehlednější, protože místo desítek či stovek jednotlivých proměnných obsahuje pouze jeden záznam za celý oddíl.
+
+Na závěr funkce exportuje návrh do souboru `frekvence_manualni_mapping_autogenerovana.yml`, který slouží jako podklad pro ruční doplnění a úpravu finálního souboru `frekvence_manualni_mapping.yml`.
+
+### Detekce nesedících měsíců
+
+**Nesedící měsíce** jsou měsíce, které se měří v datech, ale neměly by se měřit dle frekvence, nebo naopak – měly by se měřit měly, ale nejsou přítomny. Pro každý rok se porovnají skutečně měřené měsíce s měsíci očekávanými podle zjištěné frekvence měření.
+
+**Očekávané měsíce** jsou určené frekvencí. U čtvrtletních proměnných jsou za očekávané měsíce považovány `03, 06, 09 a 12`. U ročních proměnných se nejprve určí modus měsíce měření napříč všemi roky dané proměnné. Tento měsíc je následně použit jako referenční při kontrole pokrytí. Díky tomu lze správně validovat roční proměnné vykazované v různých měsících (např. v březnu, září nebo prosinci), aniž by byl prosinec pevně vyžadován.
+
+Měřené měsíce jsou ty skutečně přítomné v datech (`non-NA` hodnoty, případně data bez cyklických nul pokud `clean_zeros = TRUE` ve `validace_pam()`).
+
+Pro každý rok se nejprve ověří, zda jsou přítomny všechny měsíce očekávané podle zjištěné frekvence. Výsledek této kontroly je uložen do proměnné `mereni_ok` (`TRUE`/`FALSE`). Nesedící měsíce jsou určeny jako **symetrická diference** mezi množinou skutečně měřených a očekávaných měsíců:
+
+$$ {nesedici\_mesice} = ({merene} \setminus {ocekavane}) \cup ({ocekavane} \setminus {merene})  $$
+
+Výsledný seznam obsahuje:
+
+-   měsíce, které měly být měřeny, ale chybí a
+-   měsíce, které se v datech vyskytují, přestože se měřit neměly.
+
+Například u roční proměnné s očekávaným měsícem `12` a skutečně naměřenými měsíci `03, 09` bude výsledkem seznam `03, 09, 12`, kde `03` a `09` představují přebývající měsíc a `12` chybějící měsíc.
+
+Tyto informace jsou uvedeny ve sloupci **`nesedici_mesice`** na listu **Strange behaviour**. Pokud je hodnota `mereni_ok = FALSE`, sloupec `nesedici_mesice` obsahuje seznam chybějících a přebývajících měsíců.
+
+## Statistiky z diferencí vs. raw hodnot
+
+Pro proměnné se **sub-roční frekvencí** (měsíční, čtvrtletní, pololetní) se `count_uniques`, `min`, `max` a `outliers_ratio` počítají z **diferencí** mezi po sobě jdoucími hodnotami – lépe zachytí skokové změny a anomálie v průběhu roku. Pro **roční** proměnné se počítají z **raw hodnot**.
+
+## Příklad použití funkce `validace_pam()` – jednotlivé výkazy
 
 ### P1-04
 
@@ -694,7 +795,7 @@ PaM validace (`validace_PAM.R`) a validace datového modelu školy [EduData](ht
 +------------------------------+--------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
 | **Identifikátor zařízení**   | `red_izo`, `p_izo` , `izo` dle zvolené agregace výkazu | `izo / red_izo` / `rid` dle výkazu                                                                                                  |
 +------------------------------+--------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
-| **Labely**                   | nejnovější soubor ze složky labelů (automaticky)       | fixní `pamvykpol_labels.xlsx`                                                                                                       |
+| **Labely**                   | nejnovější soubor ze složky labelů (automaticky)       | fixní `vykpol_new.xlsx`                                                                                                             |
 +------------------------------+--------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
 :::
 

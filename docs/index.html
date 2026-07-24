@@ -2361,12 +2361,7 @@ window.Quarto = {
   <li><a href="#výstupní-.xlsx-reporty" id="toc-výstupní-.xlsx-reporty" class="nav-link" data-scroll-target="#výstupní-.xlsx-reporty"><span class="header-section-number">3</span> Výstupní <code>.xlsx</code> reporty</a>
   <ul class="collapse">
   <li><a href="#list-report-overview" id="toc-list-report-overview" class="nav-link" data-scroll-target="#list-report-overview"><span class="header-section-number">3.1</span> List „Report overview”</a></li>
-  <li><a href="#list-summary" id="toc-list-summary" class="nav-link" data-scroll-target="#list-summary"><span class="header-section-number">3.2</span> List „Summary”</a>
-  <ul class="collapse">
-  <li><a href="#sec-mapovani-labelu" id="toc-sec-mapovani-labelu" class="nav-link" data-scroll-target="#sec-mapovani-labelu"><span class="header-section-number">3.2.1</span> Mapování labelů na základě <code>polozka_index</code></a></li>
-  <li><a href="#sec-frekvence" id="toc-sec-frekvence" class="nav-link" data-scroll-target="#sec-frekvence"><span class="header-section-number">3.2.2</span> Detekce frekvence měření</a></li>
-  <li><a href="#statistiky-z-diferencí-vs.-raw-hodnot" id="toc-statistiky-z-diferencí-vs.-raw-hodnot" class="nav-link" data-scroll-target="#statistiky-z-diferencí-vs.-raw-hodnot"><span class="header-section-number">3.2.3</span> Statistiky z diferencí vs. raw hodnot</a></li>
-  </ul></li>
+  <li><a href="#list-summary" id="toc-list-summary" class="nav-link" data-scroll-target="#list-summary"><span class="header-section-number">3.2</span> List „Summary”</a></li>
   <li><a href="#list-strange-behaviour" id="toc-list-strange-behaviour" class="nav-link" data-scroll-target="#list-strange-behaviour"><span class="header-section-number">3.3</span> List „Strange behaviour”</a></li>
   <li><a href="#list-example-of-strange-behaviour" id="toc-list-example-of-strange-behaviour" class="nav-link" data-scroll-target="#list-example-of-strange-behaviour"><span class="header-section-number">3.4</span> List „Example of strange behaviour”</a></li>
   </ul></li>
@@ -2374,16 +2369,30 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#vstupní-parametry" id="toc-vstupní-parametry" class="nav-link" data-scroll-target="#vstupní-parametry"><span class="header-section-number">4.1</span> Vstupní parametry</a></li>
   <li><a href="#kroky-zpracování" id="toc-kroky-zpracování" class="nav-link" data-scroll-target="#kroky-zpracování"><span class="header-section-number">4.2</span> Kroky zpracování</a></li>
-  <li><a href="#příklad-použití-jednotlivé-výkazy" id="toc-příklad-použití-jednotlivé-výkazy" class="nav-link" data-scroll-target="#příklad-použití-jednotlivé-výkazy"><span class="header-section-number">4.3</span> Příklad použití – jednotlivé výkazy</a>
+  <li><a href="#mapování-labelů-na-základě-polozka_index" id="toc-mapování-labelů-na-základě-polozka_index" class="nav-link" data-scroll-target="#mapování-labelů-na-základě-polozka_index"><span class="header-section-number">4.3</span> Mapování labelů na základě <code>polozka_index</code></a>
   <ul class="collapse">
-  <li><a href="#p1-04-1" id="toc-p1-04-1" class="nav-link" data-scroll-target="#p1-04-1"><span class="header-section-number">4.3.1</span> P1-04</a></li>
-  <li><a href="#p1a-1" id="toc-p1a-1" class="nav-link" data-scroll-target="#p1a-1"><span class="header-section-number">4.3.2</span> P1a</a></li>
-  <li><a href="#p1c-ve-smyčce-přes-oddíly" id="toc-p1c-ve-smyčce-přes-oddíly" class="nav-link" data-scroll-target="#p1c-ve-smyčce-přes-oddíly"><span class="header-section-number">4.3.3</span> P1c (ve smyčce přes oddíly)</a></li>
+  <li><a href="#proces-mapování" id="toc-proces-mapování" class="nav-link" data-scroll-target="#proces-mapování"><span class="header-section-number">4.3.1</span> Proces mapování</a></li>
   </ul></li>
-  <li><a href="#sec-argumenty-validace-pam" id="toc-sec-argumenty-validace-pam" class="nav-link" data-scroll-target="#sec-argumenty-validace-pam"><span class="header-section-number">4.4</span> Shrnutí argumentů dle výkazu</a></li>
-  <li><a href="#výstup-funkce" id="toc-výstup-funkce" class="nav-link" data-scroll-target="#výstup-funkce"><span class="header-section-number">4.5</span> Výstup funkce</a>
+  <li><a href="#sec-frekvence" id="toc-sec-frekvence" class="nav-link" data-scroll-target="#sec-frekvence"><span class="header-section-number">4.4</span> Detekce frekvence měření</a>
   <ul class="collapse">
-  <li><a href="#prvky-compare-r-list-jen-při-compare_data-true" id="toc-prvky-compare-r-list-jen-při-compare_data-true" class="nav-link" data-scroll-target="#prvky-compare-r-list-jen-při-compare_data-true"><span class="header-section-number">4.5.1</span> Prvky <code>$compare</code> (R list, jen při <code>compare_data = TRUE</code>)</a></li>
+  <li><a href="#sec-cycling-zeros" id="toc-sec-cycling-zeros" class="nav-link" data-scroll-target="#sec-cycling-zeros"><span class="header-section-number">4.4.1</span> Cyklické nuly</a></li>
+  <li><a href="#očekávané-měsíce-měření" id="toc-očekávané-měsíce-měření" class="nav-link" data-scroll-target="#očekávané-měsíce-měření"><span class="header-section-number">4.4.2</span> Očekávané měsíce měření</a></li>
+  <li><a href="#algoritmus-detekce-frekvence" id="toc-algoritmus-detekce-frekvence" class="nav-link" data-scroll-target="#algoritmus-detekce-frekvence"><span class="header-section-number">4.4.3</span> Algoritmus detekce frekvence</a></li>
+  <li><a href="#ruční-mapování-frekvence" id="toc-ruční-mapování-frekvence" class="nav-link" data-scroll-target="#ruční-mapování-frekvence"><span class="header-section-number">4.4.4</span> Ruční mapování frekvence</a></li>
+  <li><a href="#automatické-vytvoření-mapovací-tabulky-pro-roční-data" id="toc-automatické-vytvoření-mapovací-tabulky-pro-roční-data" class="nav-link" data-scroll-target="#automatické-vytvoření-mapovací-tabulky-pro-roční-data"><span class="header-section-number">4.4.5</span> Automatické vytvoření mapovací tabulky pro roční data</a></li>
+  <li><a href="#detekce-nesedících-měsíců" id="toc-detekce-nesedících-měsíců" class="nav-link" data-scroll-target="#detekce-nesedících-měsíců"><span class="header-section-number">4.4.6</span> Detekce nesedících měsíců</a></li>
+  </ul></li>
+  <li><a href="#statistiky-z-diferencí-vs.-raw-hodnot" id="toc-statistiky-z-diferencí-vs.-raw-hodnot" class="nav-link" data-scroll-target="#statistiky-z-diferencí-vs.-raw-hodnot"><span class="header-section-number">4.5</span> Statistiky z diferencí vs. raw hodnot</a></li>
+  <li><a href="#příklad-použití-funkce-validace_pam-jednotlivé-výkazy" id="toc-příklad-použití-funkce-validace_pam-jednotlivé-výkazy" class="nav-link" data-scroll-target="#příklad-použití-funkce-validace_pam-jednotlivé-výkazy"><span class="header-section-number">4.6</span> Příklad použití funkce <code>validace_pam()</code> – jednotlivé výkazy</a>
+  <ul class="collapse">
+  <li><a href="#p1-04-1" id="toc-p1-04-1" class="nav-link" data-scroll-target="#p1-04-1"><span class="header-section-number">4.6.1</span> P1-04</a></li>
+  <li><a href="#p1a-1" id="toc-p1a-1" class="nav-link" data-scroll-target="#p1a-1"><span class="header-section-number">4.6.2</span> P1a</a></li>
+  <li><a href="#p1c-ve-smyčce-přes-oddíly" id="toc-p1c-ve-smyčce-přes-oddíly" class="nav-link" data-scroll-target="#p1c-ve-smyčce-přes-oddíly"><span class="header-section-number">4.6.3</span> P1c (ve smyčce přes oddíly)</a></li>
+  </ul></li>
+  <li><a href="#sec-argumenty-validace-pam" id="toc-sec-argumenty-validace-pam" class="nav-link" data-scroll-target="#sec-argumenty-validace-pam"><span class="header-section-number">4.7</span> Shrnutí argumentů dle výkazu</a></li>
+  <li><a href="#výstup-funkce" id="toc-výstup-funkce" class="nav-link" data-scroll-target="#výstup-funkce"><span class="header-section-number">4.8</span> Výstup funkce</a>
+  <ul class="collapse">
+  <li><a href="#prvky-compare-r-list-jen-při-compare_data-true" id="toc-prvky-compare-r-list-jen-při-compare_data-true" class="nav-link" data-scroll-target="#prvky-compare-r-list-jen-při-compare_data-true"><span class="header-section-number">4.8.1</span> Prvky <code>$compare</code> (R list, jen při <code>compare_data = TRUE</code>)</a></li>
   </ul></li>
   </ul></li>
   <li><a href="#sec-srovnani-varek" id="toc-sec-srovnani-varek" class="nav-link" data-scroll-target="#sec-srovnani-varek"><span class="header-section-number">5</span> Srovnání dvou várek validací</a>
@@ -2399,7 +2408,7 @@ window.Quarto = {
   </ul></li>
   <li><a href="#implementace" id="toc-implementace" class="nav-link" data-scroll-target="#implementace"><span class="header-section-number">5.6</span> Implementace</a></li>
   </ul></li>
-  <li><a href="#srovnání-s-validací-datového-modelu-školy-dm" id="toc-srovnání-s-validací-datového-modelu-školy-dm" class="nav-link" data-scroll-target="#srovnání-s-validací-datového-modelu-školy-dm"><span class="header-section-number">6</span> Srovnání s validací datového modelu školy (DM)</a></li>
+  <li><a href="#srovnání-s-validací-datového-modelu-školy-dm" id="toc-srovnání-s-validací-datového-modelu-školy-dm" class="nav-link" data-scroll-target="#srovnání-s-validací-datového-modelu-školy-dm"><span class="header-section-number">6</span> Srovnání s validací datového modelu školy (DM)</a></li>
   </ul>
 </nav>
 </div>
@@ -2456,12 +2465,12 @@ vertical-align: middle !important;
 }
 </style>
 </div>
-<p>Tato metodika popisuje postup automatizované validace r-kových proměnných z výkazů personalistiky a mezd (PaM) zpracovávaných ve formátu <code>.parquet</code>. Cílem je systematická kontrola kvality dat – detekce strukturálních nesrovnalostí, chybějících hodnot, záporných hodnot, odlehlých pozorování a nekonzistentního měření v čase. Oproti validaci datového modelu školy pracuje PaM validace s měsíční časovou dimenzí a automaticky detekuje frekvenci měření jednotlivých proměnných.</p>
+<p>Tato metodika popisuje postup automatizované validace r-kových proměnných z výkazů personalistiky a mezd (PaM) zpracovávaných ve formátu <code>.parquet</code>. Cílem je systematická kontrola kvality dat – detekce strukturálních nesrovnalostí, chybějících hodnot, záporných hodnot, odlehlých pozorování a nekonzistentního měření v čase. Oproti validaci datového modelu školy pracuje PaM validace s měsíční časovou dimenzí a automaticky detekuje frekvenci měření jednotlivých proměnných.</p>
 <p>Výstupem jsou strukturované přehledy ve formátu <code>.xlsx</code>, jeden soubor za každý výkaz (P1-04, P1a, případně oddíly P1c).</p>
 <hr>
 <section id="vstupní-data" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Vstupní data</h1>
-<p>Validace pracuje se třemi typy výkazů, každý s odlišnou strukturou:</p>
+<p>Validace pracuje se třemi typy výkazů, každý s odlišnou strukturou:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 13%">
@@ -2493,7 +2502,7 @@ vertical-align: middle !important;
 </tr>
 <tr class="odd">
 <td><strong>P1c</strong></td>
-<td><code>r01</code>–<code>r14</code>, <code>r601</code>–<code>r612</code></td>
+<td><code>r01</code>–<code>r16</code>, <code>r601</code>–<code>r612</code></td>
 <td><code>ico</code> nebo <code>red_izo</code></td>
 <td>více <code>.parquet</code> souborů dle oddílů<br>
 (IV, IVa, IVb, …, VIII)</td>
@@ -2506,20 +2515,20 @@ vertical-align: middle !important;
 <li><strong>P1a</strong>: <code>rok</code>, <code>mes</code>, <code>hosp_druh</code>, <code>plat_rad</code> (bez <code>druh_pam</code>)</li>
 <li><strong>P1c</strong>: <code>rok</code>, <code>druh</code></li>
 </ul>
-<p>Labely (popisné štítky) proměnných se načítají ze souboru <code>pamvykpol_labels.xlsx</code>.</p>
+<p>Labely (popisné štítky) proměnných se načítají ze souboru <code>vykpol_new.xlsx</code>.</p>
 <section id="specifika-jednotlivých-výkazů" class="level2" data-number="1.1">
 <h2 data-number="1.1" class="anchored" data-anchor-id="specifika-jednotlivých-výkazů"><span class="header-section-number">1.1</span> Specifika jednotlivých výkazů</h2>
 <section id="p1-04" class="level3" data-number="1.1.1">
 <h3 data-number="1.1.1" class="anchored" data-anchor-id="p1-04"><span class="header-section-number">1.1.1</span> P1-04</h3>
-<p>Výkaz se středně velkým počtem proměnných s převážně čtvrtletní frekvencí. Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Kód proměnné v datech (např. <code>r136</code>) se před spárováním s labely transformuje do formátu <code>pamvykpol_labels.xlsx</code> (např. <code>r01036.p1</code>). Frekvence měření se detekuje automaticky – všechny proměnné jsou čtvrtletní, statistiky se počítají z mezikvartálních diferencí.</p>
+<p>Výkaz se středně velkým počtem proměnných s převážně čtvrtletní frekvencí. Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Kód proměnné v datech (např. <code>r136</code>) se před spárováním s labely transformuje do formátu <code>vykpol_new.xlsx</code> (např. <code>r01036.p1</code>). Frekvence měření se detekuje automaticky – všechny proměnné jsou čtvrtletní, statistiky se počítají z mezikvartálních diferencí.</p>
 </section>
 <section id="p1a" class="level3" data-number="1.1.2">
 <h3 data-number="1.1.2" class="anchored" data-anchor-id="p1a"><span class="header-section-number">1.1.2</span> P1a</h3>
-<p>Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Chybí sloupec <code>druh_pam</code>. Identifikátor zařízení je <code>rid</code>, případně <code>ico</code> (nikoliv <code>red_izo</code> jako možnost u ostatních výkazů). U ročních proměnných se statistiky počítají také z mezikvartálních diferencí.</p>
+<p>Výkaz s nejbohatší strukturou – až stovky proměnných s čtvrtletní měření. Chybí sloupec <code>druh_pam</code>. Identifikátor zařízení je <code>rid</code>, případně <code>ico</code> (nikoliv <code>red_izo</code> jako možnost u ostatních výkazů). U ročních proměnných se statistiky počítají také z mezikvartálních diferencí.</p>
 </section>
 <section id="p1c" class="level3" data-number="1.1.3">
 <h3 data-number="1.1.3" class="anchored" data-anchor-id="p1c"><span class="header-section-number">1.1.3</span> P1c</h3>
-<p>Výkaz je rozdělen do oddílů (IV, IVa, …, VIII), každý oddíl je samostatný <code>.parquet</code> soubor. Validace se spouští ve smyčce přes všechny oddíly, každý oddíl dostane vlastní <code>.xlsx</code> report. Kód proměnné v datech (např. <code>r01</code> v VIII. oddíle) se před párováním s labely přepočítá pomocí funkce <code>oddil_to_code()</code>, která převede římskou číslici oddílu na dvouciferný kód (např. VIII → <code>08</code>, IVa → <code>4a</code>), výsledný klíč má formát <code>r08001.1c</code>. ID sloupce P1c jsou <code>rok</code>, <code>mes</code>, <code>druh</code> – odvozeny ze sdíleného vektoru <code>id_cols</code> přes <code>intersect</code>.</p>
+<p>Výkaz je rozdělen do oddílů (IV, IVa, …, VIII), každý oddíl je samostatný <code>.parquet</code> soubor. Validace se spouští ve smyčce přes všechny oddíly, každý oddíl dostane vlastní <code>.xlsx</code> report. Kód proměnné v datech (např. <code>r01</code> v VIII. oddíle) se před párováním s labely přepočítá pomocí funkce <code>oddil_to_code()</code>, která převede římskou číslici oddílu na dvouciferný kód (např. VIII → <code>08</code>, IVa → <code>4a</code>), výsledný klíč má formát <code>r08001.1c</code>. ID sloupce P1c jsou <code>rok</code>, <code>mes</code>, <code>druh</code> – odvozeny ze sdíleného vektoru <code>id_cols</code> přes <code>intersect</code>.</p>
 <hr>
 </section>
 </section>
@@ -2538,7 +2547,7 @@ vertical-align: middle !important;
 <p>Každý výkaz (P1-04, P1a, oddíly P1c) generuje samostatný <code>.xlsx</code> soubor se čtyřmi listy.</p>
 <section id="list-report-overview" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="list-report-overview"><span class="header-section-number">3.1</span> List „Report overview”</h2>
-<p>Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekcemi se záhlavím, skládajícími se pod sebou:</p>
+<p>Shrnuje základní informace o struktuře a kvalitě dat. List je tvořen sekcemi se záhlavím, skládajícími se pod sebou:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 10%">
@@ -2553,15 +2562,23 @@ vertical-align: middle !important;
 <tbody>
 <tr class="odd">
 <td><strong>Název výkazu</strong></td>
-<td>Označení výkazu (P1-04, P1a, P1c s oddílem).</td>
+<td>Označení výkazu (P1-04, P1a, P1c s oddílem).</td>
 </tr>
 <tr class="even">
 <td><strong>Report vytvořen</strong></td>
 <td>Kdy byl report vytvořen.</td>
 </tr>
 <tr class="odd">
-<td><strong>Filtrováno na roky ≤ X</strong></td>
+<td><strong>Filtrováno na roky ≤ Y</strong></td>
 <td>Zobrazí se, pokud byl nastaven parametr <code>max_rok</code>. Ukazuje, do kterého roku data vstupují do analýzy</td>
+</tr>
+<tr class="even">
+<td><strong>Čištění cyklických nul</strong></td>
+<td>Zda bylo při volání funkce <code>validace_pam()</code> povoleno čištění cyklických nul. Mechanismus detekce a čištění cyklických nul je podrobně popsán v <a href="#sec-cycling-zeros" class="quarto-xref">Sekce 4.4.1</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Výpočet frekvence proměnných</strong></td>
+<td>Uvádí počet proměnných, u nichž byla frekvence měření určena automaticky na základě dat, a počet proměnných, jejichž frekvence byla převzata z manuální mapovací tabulky <code>frekvence_manualni_maping.yml</code></td>
 </tr>
 <tr class="even">
 <td><strong>Typy proměnných</strong></td>
@@ -2569,7 +2586,7 @@ vertical-align: middle !important;
 </tr>
 <tr class="odd">
 <td><strong>Frekvence měření</strong></td>
-<td>Počet proměnných dle detekované frekvence měření: roční / pololetní / čtvrtletní / měsíční / nepravidelná / neměřeno.</td>
+<td>Počet proměnných dle detekované frekvence měření: <code>roční</code> / <code>pololetní</code> / <code>čtvrtletní</code> / <code>měsíční</code> / <code>nepravidelná</code> / <code>neměřeno</code> dle mechanismu popsaném v <a href="#sec-frekvence" class="quarto-xref">Sekce 4.4</a>.</td>
 </tr>
 <tr class="even">
 <td><strong>Počet let</strong></td>
@@ -2583,21 +2600,21 @@ vertical-align: middle !important;
 <td><strong>Identifikátory</strong></td>
 <td><ul>
 <li><p><em>Identifikátor zařízení</em> – sloupec použitý jako identifikátor (<code>ico</code>, <code>red_izo</code>, <code>rid</code>, …).</p></li>
-<li><p><em>Identifikátory jedinečných řádků</em>: Kombinace proměnných, které společně s identifikátorem zařízení a časovou osou jednoznačně určují jednotlivé řádky dat. Tato kombinace slouží ke kontrole duplicity záznamů (např. u výkazu P1c, oddílu IVb: <code>druh</code>, <code>kategorie</code>, <code>stupen</code> a <code>zdroj</code>).</p></li>
+<li><p><em>Identifikátory jedinečných řádků</em>: Kombinace proměnných, které společně s identifikátorem zařízení a časovou osou jednoznačně určují jednotlivé řádky dat. Tato kombinace slouží ke kontrole duplicity záznamů (např. u výkazu P1c, oddílu IVb: <code>druh</code>, <code>kategorie</code>, <code>stupen</code> a <code>zdroj</code>).</p></li>
 <li><p><em>Počet chybejích</em> <identifikátor> – řádky, ve kterých chybí daný identifikátor zařízení (<code>ico</code>, <code>red_izo</code>, <code>rid</code>).</identifikátor></p></li>
 </ul></td>
 </tr>
 <tr class="odd">
 <td><strong>Kontrola anomálií</strong></td>
 <td><ul>
-<li><p><em>Výskyt závažných chyb</em> – počet proměnných se závažnými chybami ze všech proměnných, a celkový počet | chyb. Formát: <code>5 / 16 (3 chyby)</code> = 5 proměnných z 16 má 3 závažné chyby. Zobrazí se jen pokud &gt; 0.</p></li>
-<li><p><em>Výskyt zvláštního chování</em> – počet proměnných se zvláštním chováním ze všech proměnných, a celkový počet výskytů. Formát: <code>4 / 16 (2 chyby)</code> = 4 proměnné z 16 mají 2 výskyty zvláštního chování. Zobrazí se jen pokud &gt; 0.</p></li>
-<li><p><em>Počet záporných proměnných</em> – proměnné s alespoň jednou zápornou hodnotou.</p></li>
-<li><p><em>Počet prázdných labelů</em> – proměnné bez namapovaného popisného štítku v <code>pamvykpol_labels.xlsx</code>.</p></li>
-<li><p><em>Počet řádků s mes=NA</em> – počet řádků bez vyplněného měsíce (<code>mes</code>).</p></li>
+<li><p><em>Výskyt závažných chyb</em> – počet proměnných se závažnými chybami ze všech proměnných, a celkový počet | chyb. Formát: <code>5 / 16 (3 chyby)</code> = 5 proměnných z 16 má 3 závažné chyby. Zobrazí se jen pokud &gt; 0.</p></li>
+<li><p><em>Výskyt zvláštního chování</em> – počet proměnných se zvláštním chováním ze všech proměnných, a celkový počet výskytů. Formát: <code>4 / 16 (2 chyby)</code> = 4 proměnné z 16 mají 2 výskyty zvláštního chování. Zobrazí se jen pokud &gt; 0.</p></li>
+<li><p><em>Počet záporných proměnných</em> – proměnné s alespoň jednou zápornou hodnotou.</p></li>
+<li><p><em>Počet prázdných labelů</em> – proměnné bez namapovaného popisného štítku v <code>vykpol_new.xlsx</code>.</p></li>
+<li><p><em>Počet řádků s mes=NA</em> – počet řádků bez vyplněného měsíce (<code>mes</code>).</p></li>
 <li><p><em>Existence cyklických nul</em> – zda byl identifikován měsíc, který ve všech letech obsahuje pouze technicky vykazované nulové hodnoty.</p></li>
-<li><p><em>Existence nekonzistentního měření</em> – zda alespoň jedna proměnná má nekonzistentní pokrytí.</p></li>
-<li><p><em>Existence duplicit</em> / <em>Počet duplicit</em> – zda se ve výkaze vyskytují opakované kombinace klíčových sloupců a v jakém počtu.</p></li>
+<li><p><em>Existence nekonzistentního měření</em> – počet proměnných s nekonzistentním pokrytím.</p></li>
+<li><p><em>Existence duplicit</em> / <em>Počet duplicit</em> – zda se ve výkaze vyskytují opakované kombinace klíčových sloupců a v jakém počtu.</p></li>
 </ul></td>
 </tr>
 <tr class="even">
@@ -2605,15 +2622,15 @@ vertical-align: middle !important;
 <td>Konkrétní příklady duplicitních řádků (pokud existují).</td>
 </tr>
 <tr class="odd">
-<td><strong>Zařízení s nejvíce outlierů</strong></td>
-<td>Top 20 zařízení s alespoň 5 outliery, seřazená sestupně.</td>
+<td><strong>Zařízení s nejvíce outlierů</strong></td>
+<td>Top 20 zařízení s alespoň 5 outliery, seřazená sestupně.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="list-summary" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="list-summary"><span class="header-section-number">3.2</span> List „Summary”</h2>
-<p>Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:</p>
+<p>Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 8%">
@@ -2628,11 +2645,11 @@ vertical-align: middle !important;
 <tbody>
 <tr class="odd">
 <td><code>polozka_index</code></td>
-<td>Kód proměnné v datech (např. <code>r001</code>, <code>r01001</code>, <code>r1</code>, <code>r01</code>).</td>
+<td>Kód proměnné v datech (např. <code>r102</code>, <code>r010102</code>, <code>r01</code>, <code>r601</code>).</td>
 </tr>
 <tr class="even">
 <td><code>polozka_index_suffix</code></td>
-<td>Unikátní kód každé proměnné včetně suffixu výkazu (např. <code>r001</code> z P1-04 se mapuje na <code>r0001.p1</code>, <code>r01001</code> z P1a na <code>r01001.1a</code>, <code>r01</code> z P1c-IV na <code>r04001.1c</code> atd.).</td>
+<td>Unikátní kód každé proměnné včetně suffixu výkazu (např. <code>r102</code> z P1-04 se mapuje na <code>r01002.p1</code>, <code>r010102</code> z P1a na <code>r010102.1a</code>, <code>r01</code> z P1c-IV na <code>r04001.1c</code> atd.).</td>
 </tr>
 <tr class="odd">
 <td><code>typ_promenne</code></td>
@@ -2640,11 +2657,11 @@ vertical-align: middle !important;
 </tr>
 <tr class="even">
 <td><code>count_years</code></td>
-<td>Počet let, ve kterých se u proměnné vyskytuje alespoň jedna nenulová hodnota.</td>
+<td>Počet let, ve kterých se u proměnné vyskytuje alespoň jedna nenulová hodnota.</td>
 </tr>
 <tr class="odd">
 <td><code>count_mes</code></td>
-<td>Celkový počet měsíců s nenulovou hodnotou napříč všemi lety.</td>
+<td>Celkový počet měsíců s nenulovou hodnotou napříč všemi lety.</td>
 </tr>
 <tr class="even">
 <td><code>modus_mesicu_za_rok</code></td>
@@ -2652,7 +2669,7 @@ vertical-align: middle !important;
 </tr>
 <tr class="odd">
 <td><code>frekvence_mereni</code></td>
-<td>Detekovaná frekvence měření: <code>roční</code> / <code>pololetní</code> / <code>čtvrtletní</code> / <code>měsíční</code> / <code>nepravidelná</code>.</td>
+<td>Detekovaná frekvence měření: <code>roční</code> / <code>pololetní</code> / <code>čtvrtletní</code> / <code>měsíční</code> / <code>nepravidelná</code> dle mechanismu popsaném v <a href="#sec-frekvence" class="quarto-xref">Sekce 4.4</a>.</td>
 </tr>
 <tr class="even">
 <td><code>merene_mesice</code></td>
@@ -2668,11 +2685,11 @@ vertical-align: middle !important;
 </tr>
 <tr class="odd">
 <td><code>count_uniques</code></td>
-<td>Počet unikátních hodnot. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix <code>_diff</code>.</td>
+<td>Počet unikátních hodnot. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix <code>_diff</code>.</td>
 </tr>
 <tr class="even">
 <td><code>min</code> / <code>max</code></td>
-<td>Minimum a maximum. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix <code>_diff</code>.</td>
+<td>Minimum a maximum. U ročních z raw hodnot, u subročních proměnných počítán z hodnot diferencí mezi po sobě jdoucími měřeními (zachycuje změny v čase), u ročních z raw hodnot – pak v názvu metriky suffix <code>_diff</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>is_negative</code></td>
@@ -2680,15 +2697,15 @@ vertical-align: middle !important;
 </tr>
 <tr class="even">
 <td><code>outliers_ratio</code></td>
-<td>Podíl odlehlých hodnot (formátováno jako %). Za odlehlé jsou považovány hodnoty překračující práh <span class="math inline">\(&gt; Q_3 + 3 \times IQR\)</span>. U sub-ročních proměnných se sleduje i dolní mez <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span>. Horní mez se počítá z nenulových a neprázdných hodnot, dolní mez ze všech neprázdných hodnot (nula v diferenci = žádná změna).</td>
+<td>Podíl odlehlých hodnot (formátováno jako %). Za odlehlé jsou považovány hodnoty překračující práh <span class="math inline">\(&gt; Q_3 + 3 \times IQR\)</span>. U sub-ročních proměnných se sleduje i dolní mez <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span>. Horní mez se počítá z nenulových a neprázdných hodnot, dolní mez ze všech neprázdných hodnot (nula v diferenci = žádná změna).</td>
 </tr>
 <tr class="odd">
 <td><code>label_result</code></td>
-<td>Popisný štítek proměnné namapovaný z <code>pamvykpol_labels.xlsx</code>.</td>
+<td>Popisný štítek proměnné namapovaný z <code>vykpol_new.xlsx</code>.</td>
 </tr>
 <tr class="even">
 <td><code>first_year</code> / <code>last_year</code></td>
-<td>První a poslední rok, ve kterém má proměnná neprázdná data.</td>
+<td>První a poslední rok, ve kterém má proměnná neprázdná data.</td>
 </tr>
 <tr class="odd">
 <td><code>year&lt;rok&gt;</code> (např. <code>year23</code>)</td>
@@ -2697,88 +2714,8 @@ vertical-align: middle !important;
 </tbody>
 </table>
 <blockquote class="blockquote">
-<p><strong>Skryté sloupce:</strong> <code>count_notintegers</code> (počet neceločíselných hodnot), <code>outlier_limit_upper</code> (horní hranice odlehlostí: <span class="math inline">\(Q_3 + 3 \times IQR\)</span>) a <code>outlier_limit_lower</code> (dolní hranice odlehlostí v diferencích: <span class="math inline">\(Q_1 - 3 \times IQR\)</span>; pro roční proměnné prázdné) jsou v listu přítomny, ale skryté – slouží pro vnitřní výpočty.</p>
+<p><strong>Skryté sloupce:</strong> <code>count_notintegers</code> (počet neceločíselných hodnot), <code>outlier_limit_upper</code> (horní hranice odlehlostí: <span class="math inline">\(Q_3 + 3 \times IQR\)</span>) a <code>outlier_limit_lower</code> (dolní hranice odlehlostí v diferencích: <span class="math inline">\(Q_1 - 3 \times IQR\)</span>; pro roční proměnné prázdné) jsou v listu přítomny, ale skryté – slouží pro vnitřní výpočty.</p>
 </blockquote>
-<section id="sec-mapovani-labelu" class="level3" data-number="3.2.1">
-<h3 data-number="3.2.1" class="anchored" data-anchor-id="sec-mapovani-labelu"><span class="header-section-number">3.2.1</span> Mapování labelů na základě <code>polozka_index</code></h3>
-<p>Jednotlivé r-proměnné se v parquet souborech a v tabulce <code>pamvykpol_labels.xlsx</code> identifikují pomocí kódů (např. <code>r001</code>, <code>r1</code>, <code>r01001</code> atd.), které se liší:</p>
-<ol type="1">
-<li><strong>Délkou</strong> – P1-04 má kódy 4-6 znaků (např. <code>r001</code>, <code>r01001</code>), P1a 2-6 znaků (např. <code>r1</code>, <code>r01001</code>), P1c 2-3 znaky (např. <code>r1</code>, <code>r2</code>)</li>
-<li><strong>Suffixem</strong> – parquet soubory obsahují <code>polozka_index</code> se suffixem výkazu (např. <code>r001.p1c</code>, <code>r01001.1a</code>). Naproti tomu tabulka <code>pamvykpol_labels.xlsx</code> obsahuje ve sloupci <code>polozka</code> normalizované kódy bez suffixu, případně také sloupec <code>polozka_index</code> včetně suffixu.</li>
-</ol>
-<p>Při mapování labelů proto bylo nutné sjednotit značení proměnných podle konkrétního zdroje a typu výkazu. Zohledněny byly zejména rozdíly v délce kódů mezi výkazy P1-04, P1a a P1c a také přítomnost či nepřítomnost suffixu výkazu.</p>
-<section id="proces-mapování" class="level4">
-<h4 class="anchored" data-anchor-id="proces-mapování"><strong>Proces mapování</strong></h4>
-<p>Mapování labelů probíhá ve třech krocích:</p>
-<ol type="1">
-<li><p><strong>Normalizace názvů proměnných</strong></p>
-<p>Ve skriptu <code>validace_PAM.R</code> jsou pomocí funkce <code>rename_with()</code> z názvů proměnných odstraněny suffixy <code>\\.*$</code> označující typ výkazu (např. <code>.P1</code>, <code>.1A</code>, <code>.1C</code>). Tím se sjednotí názvy proměnných napříč jednotlivými parquet soubory.</p></li>
-<li><p><strong>Vytvoření jednoznačného identifikátoru proměnné napříč výkazy</strong></p>
-<p>Ve funkci <code>summarise_pam_variables()</code> je vytvořena pomocná proměnná <code>polozka_index_suffix</code>, která rekonstruuje označení proměnné ve stejném formátu, jaký používá tabulka <code>pamvykpol_labels.xlsx</code>.</p>
-<p>Rekonstrukce se liší podle typu výkazu:</p>
-<ul>
-<li><p><strong>P1-04</strong> – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix <code>.p1</code>.<br>
-<em>např.</em> <code>r101</code> → <code>r01001.p1</code></p></li>
-<li><p><strong>P1a</strong> – původní kód proměnné je ponechán a pouze je doplněn suffix <code>.1a</code>.<br>
-<em>např.</em> <code>r010102</code> → <code>r010102.1a</code></p></li>
-<li><p><strong>P1c</strong> – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (<code>04</code>, <code>4a</code>, <code>4b</code>, <code>4c</code>, <code>06</code>, <code>08</code>), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix <code>.1c</code>.<br>
-<em>např.</em> <code>r01</code> v oddíle IV → <code>r04001.1c</code>, <code>r01</code> v oddíle IVa → <code>r4a001.1c</code>.<br>
-Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. <code>r601</code> → <code>r06001.1c</code>.</p></li>
-</ul></li>
-<li><p><strong>Mapování labelů</strong></p>
-<p>Proměnná <code>polozka_index_suffix</code> je následně použita pro <code>match()</code> se sloupcem <code>polozka_index</code> v tabulce <code>pamvykpol_labels.xlsx</code>. Na základě nalezené shody je ke každé proměnné přiřazen odpovídající <code>label_result</code>, tj. slovní pojmenování proměnné.</p></li>
-</ol>
-<p>Tento mechanismus umožňuje, aby stejná r-proměnná (např. <code>r01</code>) mohla v různých výkazech a oddílech mít různé popisné štítky.</p>
-</section>
-</section>
-<section id="sec-frekvence" class="level3" data-number="3.2.2">
-<h3 data-number="3.2.2" class="anchored" data-anchor-id="sec-frekvence"><span class="header-section-number">3.2.2</span> Detekce frekvence měření</h3>
-<p>Frekvence se detekuje automaticky z dat jako modus počtu měřených měsíců za rok (v případě nejednoznačného modu medián):</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 37%">
-<col style="width: 36%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Modus měsíců</th>
-<th>Frekvence</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>12</td>
-<td>měsíční</td>
-</tr>
-<tr class="even">
-<td>4</td>
-<td>čtvrtletní</td>
-</tr>
-<tr class="odd">
-<td>2</td>
-<td>pololetní</td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>roční</td>
-</tr>
-<tr class="odd">
-<td>ostatní</td>
-<td>nepravidelná</td>
-</tr>
-<tr class="even">
-<td><code>NA</code></td>
-<td>neměřeno</td>
-</tr>
-</tbody>
-</table>
-<p>Je připuštěna možnost, aby se roční proměnné v různých výkazech mohly vykazovat v různých měsících (nejenom v září, ale např. i v červnu nebo v prosinci). Validace nezpevňuje prosinec jako jediný přípustný měsíc měření. Místo toho z dat zjistí, ve kterém měsíci daná proměnná nejčastěji vykazuje hodnoty (modus přes všechna léta), a ten pak použije jako referenční při kontrole pokrytí – tj. ověří, zda je tento měsíc přítomen v každém roce.</p>
-<p>Zároveň ještě před samotnou validací probíhá detekce cyklických nul. Kontroluje se, zda některý měsíc napříč všemi roky obsahuje pouze nulové hodnoty. V takovém případě se předpokládá, že se daná proměnná v tomto měsíci reálně neměří a do dat se pouze technicky přepisují nuly. Tyto cyklické nuly jsou proto funkcí <code>clean_cyclic_zeros()</code> převedeny na <code>NA</code>, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky.</p>
-</section>
-<section id="statistiky-z-diferencí-vs.-raw-hodnot" class="level3" data-number="3.2.3">
-<h3 data-number="3.2.3" class="anchored" data-anchor-id="statistiky-z-diferencí-vs.-raw-hodnot"><span class="header-section-number">3.2.3</span> Statistiky z diferencí vs. raw hodnot</h3>
-<p>Pro proměnné s <strong>sub-roční frekvencí</strong> (měsíční, čtvrtletní, pololetní) se <code>count_uniques</code>, <code>min</code>, <code>max</code> a <code>outliers_ratio</code> počítají z <strong>diferencí</strong> mezi po sobě jdoucími hodnotami – lépe zachytí skokové změny a anomálie v průběhu roku. Pro <strong>roční</strong> proměnné se počítají z <strong>raw hodnot</strong>.</p>
-</section>
 </section>
 <section id="list-strange-behaviour" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="list-strange-behaviour"><span class="header-section-number">3.3</span> List „Strange behaviour”</h2>
@@ -2804,22 +2741,22 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>label_result</code></td>
-<td>Popisný štítek, pokud se podařil namapovat z <code>pamvykpol_labels.xlsx</code>.</td>
+<td>Popisný štítek, pokud se podařil namapovat z <code>vykpol_new.xlsx</code>.</td>
 <td>neprázdné</td>
 </tr>
 <tr class="odd">
 <td><code>frekvence_mereni</code></td>
-<td>Detekovaná frekvence měření dle mechanismu popsaném v <a href="#sec-frekvence" class="quarto-xref">Sekce 3.2.2</a>.</td>
+<td>Detekovaná frekvence měření dle mechanismu popsaném v <a href="#sec-frekvence" class="quarto-xref">Sekce 4.4</a>.</td>
 <td>jiná než nepravidelná</td>
 </tr>
 <tr class="even">
 <td><code>mereni_ok_ratio</code></td>
-<td>Podíl let s plným pokrytím očekávaných měsíců (v %).</td>
+<td>Podíl let s plným pokrytím očekávaných měsíců (v %).</td>
 <td>0 %</td>
 </tr>
 <tr class="odd">
 <td><code>count_serious_errors</code></td>
-<td>Počet závažných chyb (viz níže). Proměnné s hodnotou <span class="math inline">\(&gt; 0\)</span> je třeba prošetřit přednostně.</td>
+<td>Počet závažných chyb (viz níže). Proměnné s hodnotou <span class="math inline">\(&gt; 0\)</span> je třeba prošetřit přednostně.</td>
 <td>0</td>
 </tr>
 <tr class="even">
@@ -2874,7 +2811,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>inconsistent_mereni</code></td>
-<td><code>TRUE</code> pokud frekvence měření není konzistentní napříč lety (tj. pokrytí <span class="math inline">\(&lt; 100\)</span> % u pravidelných proměnných).</td>
+<td><code>TRUE</code> pokud frekvence měření není konzistentní napříč lety (tj. pokrytí <span class="math inline">\(&lt; 100\)</span> % u pravidelných proměnných).</td>
 <td><code>FALSE</code></td>
 </tr>
 </tbody>
@@ -2889,7 +2826,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </section>
 <section id="list-example-of-strange-behaviour" class="level2" data-number="3.4">
 <h2 data-number="3.4" class="anchored" data-anchor-id="list-example-of-strange-behaviour"><span class="header-section-number">3.4</span> List „Example of strange behaviour”</h2>
-<p>Agregovaná tabulka s <strong>jedním řádkem na proměnnou</strong> – zobrazeny jsou pouze proměnné s alespoň jedním detekovaným problémem. Každý sloupec obsahuje textové shrnutí:</p>
+<p>Agregovaná tabulka s <strong>jedním řádkem na proměnnou</strong> – zobrazeny jsou pouze proměnné s alespoň jedním detekovaným problémem. Každý sloupec obsahuje textové shrnutí:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 14%">
@@ -2908,15 +2845,15 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>outliers_per_year</code></td>
-<td>Počet odlehlých hodnot (&gt; <span class="math inline">\(Q_3 + 3 \times IQR\)</span>, u sub-ročních dat také <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span>) po letech. Příklad: <code>&quot;v roce 23: 3, v roce 24: 5&quot;</code>.</td>
+<td>Počet odlehlých hodnot (&gt; <span class="math inline">\(Q_3 + 3 \times IQR\)</span>, u sub-ročních dat také <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span>) po letech. Příklad: <code>&quot;v roce 23: 3, v roce 24: 5&quot;</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>outliers_per_facility</code></td>
-<td>Zařízení s více než 5 outliery – pouze zařízení s nejvyšším počtem. Příklad: <code>&quot;Po 8 outl: 123456789&quot;</code>.</td>
+<td>Zařízení s více než 5 outliery – pouze zařízení s nejvyšším počtem. Příklad: <code>&quot;Po 8 outl: 123456789&quot;</code>.</td>
 </tr>
 <tr class="even">
 <td><code>inconsistent_mereni</code></td>
-<td>Chybějící měsíce v letech s neúplným pokrytím. Příklad: <code>&quot;v roce 23 chybí měsíce 06, 09&quot;</code>.</td>
+<td>Přehled chybějících a přebývajících měsíců podle roku. Příklad: <code>&quot;v roce 23: 06, 09&quot;</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -2925,7 +2862,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </section>
 <section id="funkce-validace_pam" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Funkce <code>validace_pam()</code></h1>
-<p>Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje výsledek do <code>.xlsx</code> souboru.</p>
+<p>Hlavní orchestrační funkce, která volá všechny dílčí kroky a zapisuje výsledek do <code>.xlsx</code> souboru.</p>
 <section id="vstupní-parametry" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="vstupní-parametry"><span class="header-section-number">4.1</span> Vstupní parametry</h2>
 <table class="caption-top table">
@@ -2945,17 +2882,17 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tr class="odd">
 <td><code>data</code></td>
 <td>–</td>
-<td>Datový rámec s r-proměnnými a ID sloupci.</td>
+<td>Datový rámec s r-proměnnými a ID sloupci.</td>
 </tr>
 <tr class="even">
 <td><code>labels_clean</code></td>
 <td><code>NULL</code></td>
-<td>Tabulka labelů z <code>prep_pam_labels()</code>.</td>
+<td>Tabulka labelů z <code>prep_pam_labels()</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>path_out</code></td>
 <td><code>NULL</code></td>
-<td>Cesta k výstupnímu <code>.xlsx</code> souboru. Pokud <code>NULL</code>, report se nezapisuje.</td>
+<td>Cesta k výstupnímu <code>.xlsx</code> souboru. Pokud <code>NULL</code>, report se nezapisuje.</td>
 </tr>
 <tr class="even">
 <td><code>id_cols</code></td>
@@ -2970,7 +2907,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tr class="even">
 <td><code>r_pattern</code></td>
 <td><code>&quot;^r\\d{3}$&quot;</code></td>
-<td>Regex vzor pro výběr r-proměnných. Pro P1a a P1c: <code>&quot;^r\\d{1}&quot;</code>, pro P1-04 <code>&quot;^r\\d{3}$&quot;</code></td>
+<td>Regex vzor pro výběr r-proměnných. Pro P1a a P1c: <code>&quot;^r\\d{1}&quot;</code>, pro P1-04 <code>&quot;^r\\d{3}$&quot;</code></td>
 </tr>
 <tr class="odd">
 <td><code>max_rok</code></td>
@@ -2990,7 +2927,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tr class="even">
 <td><code>clean_zeros</code></td>
 <td><code>TRUE</code></td>
-<td>Pokud <code>TRUE</code>, spustí se detekce a konverze cyklických nul (měsíce 100% nula) na <code>NA</code> před samotnou validací.</td>
+<td>Pokud <code>TRUE</code>, spustí se detekce a konverze cyklických nul (měsíce 100% nula) na <code>NA</code> před samotnou validací.</td>
 </tr>
 <tr class="odd">
 <td><code>outlier_multiplier</code></td>
@@ -3010,7 +2947,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tr class="even">
 <td><code>path_control</code></td>
 <td><code>NULL</code></td>
-<td>Složka s kontrolními <code>.xlsx</code> reporty, vůči kterým se nová várka porovnává.</td>
+<td>Složka s kontrolními <code>.xlsx</code> reporty, vůči kterým se nová várka porovnává.</td>
 </tr>
 </tbody>
 </table>
@@ -3018,67 +2955,242 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <section id="kroky-zpracování" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="kroky-zpracování"><span class="header-section-number">4.2</span> Kroky zpracování</h2>
 <ol type="1">
-<li><p><strong>Čištění cyklických nul</strong> (volitelné, <code>clean_zeros = TRUE</code>) – detekuje měsíce, které jsou u dané proměnné <strong>všude nulové</strong> (100% nul) a předpokládá, že se v takovém měsíci měřit neměří. Tyto nuly se funkční <code>clean_cyclic_zeros()</code> převádějí na <code>NA</code>, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky.</p></li>
+<li><p><strong>Čištění cyklických nul</strong> (volitelné, <code>clean_zeros = TRUE</code>) – detekuje měsíce, které jsou u dané proměnné <strong>všude nulové</strong> (100% nul) a předpokládá, že se v takovém měsíci měřit neměří. Tyto nuly se funkční <code>clean_cyclic_zeros()</code> převádějí na <code>NA</code>, aby bylo následně možné správně určit frekvenci měření a spočítat všechny potřebné statistiky. U proměnných s roční frekvencí se čištění cyklických nul neprovádí, protože jejich výskyt pouze v jednom měsíci roku je očekávaným stavem, nikoli indikací chybějícího měření.</p></li>
 <li><p><strong>Příprava dat</strong> – sjednocení formátu měsíce na dvě cifry (např. <code>6</code> → <code>&quot;06&quot;</code>), filtr na <code>max_rok</code>, kontrola přítomnosti r-proměnných.</p></li>
 <li><p><strong>Kontrola struktury</strong> – počty řádků, sloupců, duplicitní kombinace klíčových sloupců.</p></li>
 <li><p><strong>Detekce frekvence měření</strong> – modus měřených měsíců za rok → klasifikace proměnných.</p></li>
 <li><p><strong>Kontrola pokrytí měsíců</strong> – pro každý rok: jsou přítomny očekávané měsíce?</p></li>
 <li><p><strong>Statistiky proměnných</strong> – <code>NA</code> ratio, zeros ratio, min/max, outlier ratio, počet unikátních hodnot (z diferencí nebo raw dle frekvence).</p></li>
-<li><p><strong>Strange behaviour</strong> – flagy závažnosti a měkkých varování.</p></li>
-<li><p><strong>Příklady problémů</strong> – konkrétní záznamy s negativními, neceločíselnými a odlehlými hodnotami.</p></li>
+<li><p><strong>Strange behaviour</strong> – flagy závažnosti a měkkých varování.</p></li>
+<li><p><strong>Příklady problémů</strong> – konkrétní záznamy s negativními, neceločíselnými a odlehlými hodnotami.</p></li>
 <li><p><strong>Export</strong> – zápis do <code>.xlsx</code> se čtyřmi listy.</p></li>
-<li><p><strong>Srovnání s kontrolní várkou</strong> (volitelné, jen při <code>compare_data = TRUE</code>) – nový report se porovná se starší várkou a do výstupu se přidá prvek <code>$compare</code> (viz <a href="#sec-srovnani-varek">Srovnání dvou várek validací</a>).</p></li>
+<li><p><strong>Srovnání s kontrolní várkou</strong> (volitelné, jen při <code>compare_data = TRUE</code>) – nový report se porovná se starší várkou a do výstupu se přidá prvek <code>$compare</code> (viz <a href="#sec-srovnani-varek">Srovnání dvou várek validací</a>).</p></li>
 </ol>
 </section>
-<section id="příklad-použití-jednotlivé-výkazy" class="level2" data-number="4.3">
-<h2 data-number="4.3" class="anchored" data-anchor-id="příklad-použití-jednotlivé-výkazy"><span class="header-section-number">4.3</span> Příklad použití – jednotlivé výkazy</h2>
-<section id="p1-04-1" class="level3" data-number="4.3.1">
-<h3 data-number="4.3.1" class="anchored" data-anchor-id="p1-04-1"><span class="header-section-number">4.3.1</span> P1-04</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>report_pam <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data         =</span> pam_1_04,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels_clean =</span> labels_clean,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out     =</span> <span class="st">&quot;Výkazy-validace/260604/p1_04_validace_260604.xlsx&quot;</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(pam_1_04)),</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">facility_id  =</span> <span class="st">&quot;ico&quot;</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{3}$&quot;</span>,      <span class="co"># výchozí</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">vykaz        =</span> <span class="st">&quot;p1&quot;</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="p1a-1" class="level3" data-number="4.3.2">
-<h3 data-number="4.3.2" class="anchored" data-anchor-id="p1a-1"><span class="header-section-number">4.3.2</span> P1a</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>report_pam_1a <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data         =</span> pam_1a,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels_clean =</span> labels_clean,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out     =</span> <span class="st">&quot;Výkazy-validace/260604/p1a_validace_260604.xlsx&quot;</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(pam_1a)),</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">facility_id  =</span> <span class="st">&quot;rid&quot;</span>,            <span class="co"># !</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{1}&quot;</span>,       <span class="co"># !</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">vykaz        =</span> <span class="st">&quot;1a&quot;</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="p1c-ve-smyčce-přes-oddíly" class="level3" data-number="4.3.3">
-<h3 data-number="4.3.3" class="anchored" data-anchor-id="p1c-ve-smyčce-přes-oddíly"><span class="header-section-number">4.3.3</span> P1c (ve smyčce přes oddíly)</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">iwalk</span>(pam_p1c_all, <span class="cf">function</span>(d, oddil) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (oddil <span class="sc">==</span> <span class="st">&quot;0&quot;</span>) <span class="fu">return</span>(<span class="fu">invisible</span>(<span class="cn">NULL</span>))</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">validace_pam</span>(</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data         =</span> d,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels_clean =</span> labels_clean,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">path_out     =</span> <span class="fu">paste0</span>(<span class="st">&quot;Výkazy-validace/260604/p1c_&quot;</span>, oddil, <span class="st">&quot;_validace_260604.xlsx&quot;</span>),</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(d)),</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">facility_id  =</span> <span class="st">&quot;ico&quot;</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{1}&quot;</span>,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">vykaz        =</span> <span class="st">&quot;1c&quot;</span>,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">oddil        =</span> oddil,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="mapování-labelů-na-základě-polozka_index" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="mapování-labelů-na-základě-polozka_index"><span class="header-section-number">4.3</span> Mapování labelů na základě <code>polozka_index</code></h2>
+<p>Jednotlivé r-proměnné se v parquet souborech a v tabulce <code>vykpol_new.xlsx</code> identifikují pomocí kódů (např. <code>r102</code>, <code>r01</code>, <code>r010102</code> atd.), které se liší:</p>
+<ol type="1">
+<li><strong>Délkou a strukturou kódu</strong> – P1-04 používá čtyřznakové kódy (např. <code>r102</code>, <code>r391</code>), P1a sedmiznakové kódy (např. <code>r010102</code>, <code>r5s0905</code>) a P1c tří- až čtyřznakové kódy (např. v oddílech IV a VIII <code>r01</code>, <code>r16</code>, v oddílu VI <code>r602</code>).</li>
+<li><strong>Suffixem</strong> – parquet soubory obsahují <code>polozka_index</code> se suffixem výkazu (např. <code>r01.P1C</code>, <code>r010102.P1A</code>). Naproti tomu tabulka <code>vykpol_new.xlsx</code> obsahuje ve sloupci <code>polozka</code> normalizované kódy bez suffixu, případně také sloupec <code>polozka_index</code> včetně suffixu.</li>
+</ol>
+<p>Při mapování labelů proto bylo nutné sjednotit značení proměnných podle konkrétního zdrojetypu výkazu. Zohledněny byly zejména rozdíly v délce kódů mezi výkazy P1-04, P1a, P1c a také přítomnost či nepřítomnost suffixu výkazu.</p>
+<section id="proces-mapování" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1" class="anchored" data-anchor-id="proces-mapování"><span class="header-section-number">4.3.1</span> Proces mapování</h3>
+<p>Mapování labelů probíhá ve třech krocích:</p>
+<ol type="1">
+<li><p><strong>Normalizace názvů proměnných</strong></p>
+<p>Ve skriptu <code>validace_PAM.R</code> jsou pomocí <code>rename_with()</code> nejprve odstraněny původní suffixy <code>\\.P.*$</code> z parquet souborů, např. <code>.P1</code>, <code>.P1A</code>, <code>.P1C</code>. Tím vznikne základní normalizovaný kód proměnné.</p></li>
+<li><p><strong>Vytvoření jednoznačného identifikátoru proměnné napříč výkazy</strong></p>
+<p>Pro samotné mapování labelů je ve funkci <code>summarise_pam_variables()</code> vytvořena pomocná proměnná <code>polozka_index_suffix</code>, která převádí identifikátory proměnných do formátu používaného v tabulce <code>vykpol_new.xlsx</code>, včetně suffixů označujících typ výkazu (např. <code>.p1</code>, <code>.1a</code>, <code>.1b</code>, <code>.1c</code>).</p>
+<p>Rekonstrukce se liší podle typu výkazu:</p>
+<ul>
+<li><p><strong>P1-04</strong> – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix <code>.p1</code>.<br>
+<em>např.</em> <code>r101</code> → <code>r01001.p1</code></p></li>
+<li><p><strong>P1a</strong> – původní kód proměnné je ponechán a pouze je doplněn suffix <code>.1a</code>.<br>
+<em>např.</em> <code>r010102</code> → <code>r010102.1a</code></p></li>
+<li><p><strong>P1c</strong> – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (<code>04</code>, <code>4a</code>, <code>4b</code>, <code>4c</code>, <code>06</code>, <code>08</code>), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix <code>.1c</code>.<br>
+<em>např.</em> <code>r01</code> v oddíle IV → <code>r04001.1c</code>, <code>r01</code> v oddíle IVa → <code>r4a001.1c</code>.<br>
+Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. <code>r601</code> → <code>r06001.1c</code>.</p></li>
+</ul></li>
+<li><p><strong>Mapování labelů</strong></p>
+<p>Proměnná <code>polozka_index_suffix</code> je následně použita pro <code>match()</code> se sloupcem <code>polozka_index</code> v tabulce <code>vykpol_new.xlsx</code>. Na základě nalezené shody je ke každé proměnné přiřazen odpovídající <code>label_result</code>, tj. slovní pojmenování proměnné.</p></li>
+</ol>
+<p>Tento mechanismus umožňuje, aby stejná r-proměnná (např. <code>r01</code>) mohla v různých výkazech a oddílech mít různé popisné štítky.</p>
 </section>
 </section>
-<section id="sec-argumenty-validace-pam" class="level2" data-number="4.4">
-<h2 data-number="4.4" class="anchored" data-anchor-id="sec-argumenty-validace-pam"><span class="header-section-number">4.4</span> Shrnutí argumentů dle výkazu</h2>
+<section id="sec-frekvence" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="sec-frekvence"><span class="header-section-number">4.4</span> Detekce frekvence měření</h2>
+<p>Frekvence měření je standardně určována automaticky přímo z dat. Pro každou proměnnou se analyzuje počet měsíců, ve kterých byla v jednotlivých letech zaznamenána nenulová hodnota, a z těchto počtů se určí nejčastější hodnota (<strong>modus</strong>). Pokud je modus nejednoznačný (více hodnot se stejnou četností), použije se <strong>medián</strong>.</p>
+<div id="tbl-frekvence-mereni" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-frekvence-mereni-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabulka 1: Mapování modus měsíců na frekvenci měření
+</figcaption>
+<div aria-describedby="tbl-frekvence-mereni-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Modus měsíců</th>
+<th>Frekvence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>12</td>
+<td>měsíční</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>čtvrtletní</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>pololetní</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>roční</td>
+</tr>
+<tr class="odd">
+<td>ostatní</td>
+<td>nepravidelná</td>
+</tr>
+<tr class="even">
+<td><code>NA</code></td>
+<td>neměřeno</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<section id="sec-cycling-zeros" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="sec-cycling-zeros"><span class="header-section-number">4.4.1</span> Cyklické nuly</h3>
+<p>Ještě před výpočtem frekvence může proběhnout volitelné čištění cyklických nul (argument <code>clean_zeros = TRUE</code>).</p>
+<p>Pokud některý měsíc obsahuje u dané proměnné napříč všemi roky výhradně nulové hodnoty (100 % nul), předpokládá se, že se v tomto měsíci proměnná ve skutečnosti nesbírá a nuly jsou pouze technickým artefaktem. Funkce <code>clean_cyclic_zeros()</code> proto tyto hodnoty převádí na <code>NA</code>, aby neovlivňovaly odhad frekvence ani následné statistiky.</p>
+<p>Čištění se neprovádí u proměnných s roční frekvencí (např. výkazy P1c).</p>
+</section>
+<section id="očekávané-měsíce-měření" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="očekávané-měsíce-měření"><span class="header-section-number">4.4.2</span> Očekávané měsíce měření</h3>
+<p>U ročních proměnných validace nepředpokládá, že se data musí vykazovat pouze v prosinci. Některé výkazy jsou vyplňovány například v červnu nebo září. Proto se referenční měsíc určuje automaticky jako <strong>modus skutečných měsíců měření napříč všemi roky</strong>. Tento měsíc je následně použit při kontrole pokrytí jednotlivých let.</p>
+</section>
+<section id="algoritmus-detekce-frekvence" class="level3" data-number="4.4.3">
+<h3 data-number="4.4.3" class="anchored" data-anchor-id="algoritmus-detekce-frekvence"><span class="header-section-number">4.4.3</span> Algoritmus detekce frekvence</h3>
+<ol type="1">
+<li>Pro každou proměnnou a rok se určí měsíce obsahující neprázdná (<code>non-NA</code>) data.</li>
+<li>Spočítá se počet měřených měsíců v každém roce.</li>
+<li>Z těchto hodnot se určí modus (případně medián).</li>
+<li>Počet měsíců se převede na frekvenci podle <a href="#tbl-frekvence-mereni">tabulky</a>.</li>
+<li>Určí se očekávané měsíce měření.</li>
+<li>Ověří se, zda jsou očekávané měsíce přítomny ve všech letech.</li>
+</ol>
+<p>Výsledkem jsou mimo jiné proměnné:</p>
+<ul>
+<li><code>frekvence_mereni</code></li>
+<li><code>ocekavane_mesice</code></li>
+<li><code>mereni_ok</code></li>
+<li><code>nesedici_mesice</code></li>
+</ul>
+</section>
+<section id="ruční-mapování-frekvence" class="level3" data-number="4.4.4">
+<h3 data-number="4.4.4" class="anchored" data-anchor-id="ruční-mapování-frekvence"><span class="header-section-number">4.4.4</span> Ruční mapování frekvence</h3>
+<p>V některých výkazech (zejména menších oddílech P1a nebo P1c) nemusí být automatická detekce dostatečně spolehlivá. Frekvenci lze proto přepsat pomocí souboru <code>frekvence_manualni_maping.yml</code> umístěného v adresáři <code>/docs</code>.</p>
+<p><strong>Struktura mapovacího souboru:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;vykaz&gt;</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">&lt;r_prefix&gt;</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">frekvence</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;frekvence&gt;&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ocekavane_mesice</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;MM&gt;&quot;</span><span class="at"> </span><span class="er">nebo</span><span class="at"> </span><span class="er">&quot;&lt;MM&gt;,</span><span class="at"> </span><span class="er">&lt;MM&gt;,</span><span class="at"> </span><span class="er">...&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">poznamka</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;poznámka&quot;</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Příklad pro P1a:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">1a</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">r01</span><span class="kw">:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">frekvence</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;roční&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ocekavane_mesice</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;09&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">poznamka</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Školy se zářím - měří se jen v září&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">r02</span><span class="kw">:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">frekvence</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;čtvrtletní&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ocekavane_mesice</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;03, 06, 09, 12&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">poznamka</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Standardní čtvrtletní měření&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">r04</span><span class="kw">:</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">frekvence</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;roční&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ocekavane_mesice</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;12&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">poznamka</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Stav k 31.12. - měří se jen v prosinci&quot;</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Automaticky vypočtené hodnoty se načtou jako první a případné záznamy v mapovacím souboru je následně přepíší.</p>
+<p>V přehledu <strong>Report overview</strong> je uvedeno:</p>
+<ul>
+<li>počet automaticky detekovaných proměnných,</li>
+<li>počet proměnných převzatých z ruční mapovací tabulky.</li>
+</ul>
+<p>Pokud soubor neexistuje, jsou všechny proměnné určeny automaticky.</p>
+</section>
+<section id="automatické-vytvoření-mapovací-tabulky-pro-roční-data" class="level3" data-number="4.4.5">
+<h3 data-number="4.4.5" class="anchored" data-anchor-id="automatické-vytvoření-mapovací-tabulky-pro-roční-data"><span class="header-section-number">4.4.5</span> Automatické vytvoření mapovací tabulky pro roční data</h3>
+<p>Pro usnadnění tvorby ruční mapovací tabulky je k dispozici funkce <code>generate_auto_frequency_mapping()</code>, která na základě textových popisů proměnných (<code>label_result</code>, <code>nazev_oddilu</code>) ze souboru <code>vykpol_new.xlsx</code> vytvoří návrh mapování.</p>
+<p>Funkce vyhledává klíčové textové řetězce označující měsíc vykazování:</p>
+<ul>
+<li><code>k 31. 3.</code> → měsíc březen (<code>03</code>)</li>
+<li><code>k 30. 6.</code> → měsíc červen (<code>06</code>)</li>
+<li><code>k 30. 9.</code> → měsíc září (<code>09</code>)</li>
+<li><code>k 31. 12.</code> → měsíc prosinec (<code>12</code>)</li>
+</ul>
+<p>U nalezených proměnných automaticky nastaví <strong>roční frekvenci</strong> a odpovídající <strong>očekávaný</strong> <strong>měsíc měření</strong>.</p>
+<p>Pokud mají všechny proměnné v rámci jednoho oddílu (např. všechny proměnné <code>r01xxx</code> v I. oddíle konkrétního výkazu) stejnou detekovanou frekvenci i očekávaný měsíc měření, funkce je sloučí do jediného záznamu reprezentovaného prefixem oddílu (např. <code>r01</code>). V konzoli přitom vypisuje informační zprávy, například:</p>
+<blockquote class="blockquote">
+<p>Agregováno: <code>r01</code> (bylo 204 proměnných)</p>
+</blockquote>
+<p>Výsledná mapovací tabulka je díky tomu výrazně kratší a přehlednější, protože místo desítek či stovek jednotlivých proměnných obsahuje pouze jeden záznam za celý oddíl.</p>
+<p>Na závěr funkce exportuje návrh do souboru <code>frekvence_manualni_mapping_autogenerovana.yml</code>, který slouží jako podklad pro ruční doplnění a úpravu finálního souboru <code>frekvence_manualni_mapping.yml</code>.</p>
+</section>
+<section id="detekce-nesedících-měsíců" class="level3" data-number="4.4.6">
+<h3 data-number="4.4.6" class="anchored" data-anchor-id="detekce-nesedících-měsíců"><span class="header-section-number">4.4.6</span> Detekce nesedících měsíců</h3>
+<p><strong>Nesedící měsíce</strong> jsou měsíce, které se měří v datech, ale neměly by se měřit dle frekvence, nebo naopak – měly by se měřit měly, ale nejsou přítomny. Pro každý rok se porovnají skutečně měřené měsíce s měsíci očekávanými podle zjištěné frekvence měření.</p>
+<p><strong>Očekávané měsíce</strong> jsou určené frekvencí. U čtvrtletních proměnných jsou za očekávané měsíce považovány <code>03, 06, 09 a 12</code>. U ročních proměnných se nejprve určí modus měsíce měření napříč všemi roky dané proměnné. Tento měsíc je následně použit jako referenční při kontrole pokrytí. Díky tomu lze správně validovat roční proměnné vykazované v různých měsících (např. v březnu, září nebo prosinci), aniž by byl prosinec pevně vyžadován.</p>
+<p>Měřené měsíce jsou ty skutečně přítomné v datech (<code>non-NA</code> hodnoty, případně data bez cyklických nul pokud <code>clean_zeros = TRUE</code> ve <code>validace_pam()</code>).</p>
+<p>Pro každý rok se nejprve ověří, zda jsou přítomny všechny měsíce očekávané podle zjištěné frekvence. Výsledek této kontroly je uložen do proměnné <code>mereni_ok</code> (<code>TRUE</code>/<code>FALSE</code>). Nesedící měsíce jsou určeny jako <strong>symetrická diference</strong> mezi množinou skutečně měřených a očekávaných měsíců:</p>
+<p><span class="math display">\[ {nesedici\_mesice} = ({merene} \setminus {ocekavane}) \cup ({ocekavane} \setminus {merene})  \]</span></p>
+<p>Výsledný seznam obsahuje:</p>
+<ul>
+<li>měsíce, které měly být měřeny, ale chybí a</li>
+<li>měsíce, které se v datech vyskytují, přestože se měřit neměly.</li>
+</ul>
+<p>Například u roční proměnné s očekávaným měsícem <code>12</code> a skutečně naměřenými měsíci <code>03, 09</code> bude výsledkem seznam <code>03, 09, 12</code>, kde <code>03</code> a <code>09</code> představují přebývající měsíc a <code>12</code> chybějící měsíc.</p>
+<p>Tyto informace jsou uvedeny ve sloupci <strong><code>nesedici_mesice</code></strong> na listu <strong>Strange behaviour</strong>. Pokud je hodnota <code>mereni_ok = FALSE</code>, sloupec <code>nesedici_mesice</code> obsahuje seznam chybějících a přebývajících měsíců.</p>
+</section>
+</section>
+<section id="statistiky-z-diferencí-vs.-raw-hodnot" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="statistiky-z-diferencí-vs.-raw-hodnot"><span class="header-section-number">4.5</span> Statistiky z diferencí vs. raw hodnot</h2>
+<p>Pro proměnné se <strong>sub-roční frekvencí</strong> (měsíční, čtvrtletní, pololetní) se <code>count_uniques</code>, <code>min</code>, <code>max</code> a <code>outliers_ratio</code> počítají z <strong>diferencí</strong> mezi po sobě jdoucími hodnotami – lépe zachytí skokové změny a anomálie v průběhu roku. Pro <strong>roční</strong> proměnné se počítají z <strong>raw hodnot</strong>.</p>
+</section>
+<section id="příklad-použití-funkce-validace_pam-jednotlivé-výkazy" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="příklad-použití-funkce-validace_pam-jednotlivé-výkazy"><span class="header-section-number">4.6</span> Příklad použití funkce <code>validace_pam()</code> – jednotlivé výkazy</h2>
+<section id="p1-04-1" class="level3" data-number="4.6.1">
+<h3 data-number="4.6.1" class="anchored" data-anchor-id="p1-04-1"><span class="header-section-number">4.6.1</span> P1-04</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>report_pam <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data         =</span> pam_1_04,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels_clean =</span> labels_clean,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out     =</span> <span class="st">&quot;Výkazy-validace/260604/p1_04_validace_260604.xlsx&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(pam_1_04)),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">facility_id  =</span> <span class="st">&quot;ico&quot;</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{3}$&quot;</span>,      <span class="co"># výchozí</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">vykaz        =</span> <span class="st">&quot;p1&quot;</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="p1a-1" class="level3" data-number="4.6.2">
+<h3 data-number="4.6.2" class="anchored" data-anchor-id="p1a-1"><span class="header-section-number">4.6.2</span> P1a</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>report_pam_1a <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data         =</span> pam_1a,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels_clean =</span> labels_clean,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out     =</span> <span class="st">&quot;Výkazy-validace/260604/p1a_validace_260604.xlsx&quot;</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(pam_1a)),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">facility_id  =</span> <span class="st">&quot;rid&quot;</span>,            <span class="co"># !</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{1}&quot;</span>,       <span class="co"># !</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">vykaz        =</span> <span class="st">&quot;1a&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="p1c-ve-smyčce-přes-oddíly" class="level3" data-number="4.6.3">
+<h3 data-number="4.6.3" class="anchored" data-anchor-id="p1c-ve-smyčce-přes-oddíly"><span class="header-section-number">4.6.3</span> P1c (ve smyčce přes oddíly)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">iwalk</span>(pam_p1c_all, <span class="cf">function</span>(d, oddil) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (oddil <span class="sc">==</span> <span class="st">&quot;0&quot;</span>) <span class="fu">return</span>(<span class="fu">invisible</span>(<span class="cn">NULL</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">validace_pam</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data         =</span> d,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels_clean =</span> labels_clean,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">path_out     =</span> <span class="fu">paste0</span>(<span class="st">&quot;Výkazy-validace/260604/p1c_&quot;</span>, oddil, <span class="st">&quot;_validace_260604.xlsx&quot;</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">id_cols      =</span> <span class="fu">intersect</span>(id_cols, <span class="fu">names</span>(d)),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">facility_id  =</span> <span class="st">&quot;ico&quot;</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">r_pattern    =</span> <span class="st">&quot;^r</span><span class="sc">\\</span><span class="st">d{1}&quot;</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">vykaz        =</span> <span class="st">&quot;1c&quot;</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">oddil        =</span> oddil,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rok      =</span> <span class="dv">2024</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-argumenty-validace-pam" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="sec-argumenty-validace-pam"><span class="header-section-number">4.7</span> Shrnutí argumentů dle výkazu</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 13%">
@@ -3128,9 +3240,9 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tbody>
 </table>
 </section>
-<section id="výstup-funkce" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="výstup-funkce"><span class="header-section-number">4.5</span> Výstup funkce</h2>
-<p>Funkce vrací list s těmito prvky:</p>
+<section id="výstup-funkce" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="výstup-funkce"><span class="header-section-number">4.8</span> Výstup funkce</h2>
+<p>Funkce vrací list s těmito prvky:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 15%">
@@ -3169,7 +3281,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="odd">
 <td><code>$top_outlier_facilities</code></td>
-<td>Top 20 zařízení s nejvíce outliery</td>
+<td>Top 20 zařízení s nejvíce outliery</td>
 </tr>
 <tr class="even">
 <td><code>$max_rok_filter</code></td>
@@ -3181,16 +3293,16 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>$n_empty_facility_id</code></td>
-<td>Počet řádků s prázdným identifikátorem</td>
+<td>Počet řádků s prázdným identifikátorem</td>
 </tr>
 <tr class="odd">
 <td><code>$compare</code></td>
-<td>Výsledek srovnání s kontrolní várkou (jen při <code>compare_data = TRUE</code>); obsahuje <code>$overview_compare</code>, <code>$summary_compare</code>, <code>$count_neshod</code>, <code>$missing_vykaz</code></td>
+<td>Výsledek srovnání s kontrolní várkou (jen při <code>compare_data = TRUE</code>); obsahuje <code>$overview_compare</code>, <code>$summary_compare</code>, <code>$count_neshod</code>, <code>$missing_vykaz</code></td>
 </tr>
 </tbody>
 </table>
-<section id="prvky-compare-r-list-jen-při-compare_data-true" class="level3" data-number="4.5.1">
-<h3 data-number="4.5.1" class="anchored" data-anchor-id="prvky-compare-r-list-jen-při-compare_data-true"><span class="header-section-number">4.5.1</span> Prvky <code>$compare</code> (R list, jen při <code>compare_data = TRUE</code>)</h3>
+<section id="prvky-compare-r-list-jen-při-compare_data-true" class="level3" data-number="4.8.1">
+<h3 data-number="4.8.1" class="anchored" data-anchor-id="prvky-compare-r-list-jen-při-compare_data-true"><span class="header-section-number">4.8.1</span> Prvky <code>$compare</code> (R list, jen při <code>compare_data = TRUE</code>)</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 14%">
@@ -3205,11 +3317,11 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tbody>
 <tr class="odd">
 <td><code>$overview_compare</code></td>
-<td>Tibble s neshody v metrikách z listu „Report overview”. Sloupce: <code>variable</code> (název metriky), <code>value_control</code>, <code>value_test</code></td>
+<td>Tibble s neshody v metrikách z listu „Report overview”. Sloupce: <code>variable</code> (název metriky), <code>value_control</code>, <code>value_test</code></td>
 </tr>
 <tr class="even">
 <td><code>$summary_compare</code></td>
-<td>Tibble s neshody po proměnných. Sloupce: <code>polozka_index</code> (kód proměnné), <code>variable</code> (metrika), <code>value_control</code>, <code>value_test</code></td>
+<td>Tibble s neshody po proměnných. Sloupce: <code>polozka_index</code> (kód proměnné), <code>variable</code> (metrika), <code>value_control</code>, <code>value_test</code></td>
 </tr>
 <tr class="odd">
 <td><code>$count_neshod</code></td>
@@ -3217,7 +3329,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>$missing_vykaz</code></td>
-<td>Tibble s výkazy, které jsou jen v jedné várce. Sloupce: <code>vykaz</code> (označení výkazu), <code>status</code> („jen v control”/„jen v test”)</td>
+<td>Tibble s výkazy, které jsou jen v jedné várce. Sloupce: <code>vykaz</code> (označení výkazu), <code>status</code> („jen v control”/„jen v test”)</td>
 </tr>
 </tbody>
 </table>
@@ -3227,16 +3339,16 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </section>
 <section id="sec-srovnani-varek" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Srovnání dvou várek validací</h1>
-<p>Při opakovaném zpracování dat (např. nový měsíc / oprava vstupů) je užitečné nový report <strong>porovnat s předchozí várkou</strong> a zjistit, co se změnilo. Srovnávají se vždy <strong>dva uložené <code>.xlsx</code> reporty</strong> (kontrolní vs. testovaný), takže se nic nepřepočítává. K dispozici jsou <strong>dva režimy</strong>:</p>
+<p>Při opakovaném zpracování dat (např. nový měsíc / oprava vstupů) je užitečné nový report <strong>porovnat s předchozí várkou</strong> a zjistit, co se změnilo. Srovnávají se vždy <strong>dva uložené <code>.xlsx</code> reporty</strong> (kontrolní vs. testovaný), takže se nic nepřepočítává. K dispozici jsou <strong>dva režimy</strong>:</p>
 <ul>
 <li><strong>integrovaně při validaci</strong> – <code>validace_pam(compare_data = TRUE, path_control = …)</code> po vygenerování reportu rovnou porovná (jeden výkaz);</li>
 <li><strong>dávkově nad hotovými reporty</strong> – <code>porovnej_pam_varky(path_test, path_control)</code> porovná celé <strong>dvě složky</strong> najednou, <strong>bez opětovné validace</strong>.</li>
 </ul>
 <section id="režim-1-integrovaně-při-validaci" class="level2" data-number="5.1">
 <h2 data-number="5.1" class="anchored" data-anchor-id="režim-1-integrovaně-při-validaci"><span class="header-section-number">5.1</span> Režim 1: integrovaně při validaci</h2>
-<p>Pokud chceš porovnat novou várku s předchozí (starší), přidej do funkce <code>validace_pam()</code> tyto argumenty:</p>
+<p>Pokud chceš porovnat novou várku s předchozí (starší), přidej do funkce <code>validace_pam()</code> tyto argumenty:</p>
 <table class="caption-top table">
-<caption>Jinak je struktura argumentů stejná jako u <code>validace_pam()</code> v <a href="#sec-argumenty-validace-pam" class="quarto-xref">Sekce 4.4</a>.</caption>
+<caption>Jinak je struktura argumentů stejná jako u <code>validace_pam()</code> v <a href="#sec-argumenty-validace-pam" class="quarto-xref">Sekce 4.7</a>.</caption>
 <colgroup>
 <col style="width: 21%">
 <col style="width: 32%">
@@ -3253,7 +3365,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tr class="odd">
 <td><code>compare_data</code></td>
 <td><code>TRUE</code></td>
-<td>Aktivuje srovnání s kontrolní várkou</td>
+<td>Aktivuje srovnání s kontrolní várkou</td>
 </tr>
 <tr class="even">
 <td><code>path_control</code> <code>path_out</code></td>
@@ -3263,44 +3375,44 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 </tbody>
 </table>
-<p>Příklad s <code>compare_data = TRUE</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>report_pam <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> pam_1_04, <span class="at">labels_clean =</span> labels_clean,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out =</span> path_out_pam, <span class="at">vykaz =</span> <span class="st">&quot;p1&quot;</span>, <span class="at">max_rok =</span> <span class="dv">2024</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">compare_data =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_control =</span> <span class="st">&quot;.../Výkazy-validace/251201&quot;</span>   <span class="co"># složka se starší várkou</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>count_neshod      <span class="co"># počet neshod (overview / summary)</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>overview_compare  <span class="co"># neshody ve strukturálních metrikách</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>summary_compare   <span class="co"># neshody po proměnných</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>missing_vykaz     <span class="co"># nové/ztracené výkazy (dávkové srovnání)</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Příklad s <code>compare_data = TRUE</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>report_pam <span class="ot">&lt;-</span> <span class="fu">validace_pam</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> pam_1_04, <span class="at">labels_clean =</span> labels_clean,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_out =</span> path_out_pam, <span class="at">vykaz =</span> <span class="st">&quot;p1&quot;</span>, <span class="at">max_rok =</span> <span class="dv">2024</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">compare_data =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_control =</span> <span class="st">&quot;.../Výkazy-validace/251201&quot;</span>   <span class="co"># složka se starší várkou</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>count_neshod      <span class="co"># počet neshod (overview / summary)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>overview_compare  <span class="co"># neshody ve strukturálních metrikách</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>summary_compare   <span class="co"># neshody po proměnných</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>report_pam<span class="sc">$</span>compare<span class="sc">$</span>missing_vykaz     <span class="co"># nové/ztracené výkazy (dávkové srovnání)</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="režim-2-dávkové-srovnání-bez-opětovné-validace" class="level2" data-number="5.2">
 <h2 data-number="5.2" class="anchored" data-anchor-id="režim-2-dávkové-srovnání-bez-opětovné-validace"><span class="header-section-number">5.2</span> Režim 2: dávkové srovnání bez opětovné validace</h2>
-<p>Funkce <code>porovnej_pam_varky()</code> porovná <strong>celé dvě složky</strong> s hotovými reporty – spáruje je podle názvu a vrátí slepené neshody přes všechny výkazy + počty po výkazech (vč. řádku <code>CELKEM</code>). Nic se nevaliduje znovu.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>compare_all <span class="ot">&lt;-</span> <span class="fu">porovnej_pam_varky</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_test    =</span> <span class="st">&quot;.../Výkazy-validace/260604&quot;</span>,   <span class="co"># nová várka</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_control =</span> <span class="st">&quot;.../Výkazy-validace/251201&quot;</span>    <span class="co"># kontrolní várka</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>count_neshod       <span class="co"># počty neshod po výkazech + CELKEM</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>overview_compare   <span class="co"># se sloupcem `vykaz`</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>summary_compare    <span class="co"># se sloupcem `vykaz`</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>missing_vykaz      <span class="co"># nové/ztracené výkazy</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Skript <code>validace_PAM.R</code> toho využívá automaticky: na začátku zkontroluje, zda <strong>složka pro <code>datum_test</code> už obsahuje reporty</strong> (<code>reporty_existuji</code>). Pokud ano, <strong>generování přeskočí</strong> a rovnou porovnává; pokud ne, nejdřív spustí validace a teprve pak srovnává. Vlastní srovnání pak v obou případech zajistí jediné volání <code>porovnej_pam_varky(path_out_dir, path_control_dir)</code> na konci skriptu.</p>
+<p>Funkce <code>porovnej_pam_varky()</code> porovná <strong>celé dvě složky</strong> s hotovými reporty – spáruje je podle názvu a vrátí slepené neshody přes všechny výkazy + počty po výkazech (vč. řádku <code>CELKEM</code>). Nic se nevaliduje znovu.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>compare_all <span class="ot">&lt;-</span> <span class="fu">porovnej_pam_varky</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_test    =</span> <span class="st">&quot;.../Výkazy-validace/260604&quot;</span>,   <span class="co"># nová várka</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_control =</span> <span class="st">&quot;.../Výkazy-validace/251201&quot;</span>    <span class="co"># kontrolní várka</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>count_neshod       <span class="co"># počty neshod po výkazech + CELKEM</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>overview_compare   <span class="co"># se sloupcem `vykaz`</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>summary_compare    <span class="co"># se sloupcem `vykaz`</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>compare_all<span class="sc">$</span>missing_vykaz      <span class="co"># nové/ztracené výkazy</span></span></code></pre></div><button title="Zkopírovat do schránky" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Skript <code>validace_PAM.R</code> toho využívá automaticky: na začátku zkontroluje, zda <strong>složka pro <code>datum_test</code> už obsahuje reporty</strong> (<code>reporty_existuji</code>). Pokud ano, <strong>generování přeskočí</strong> a rovnou porovnává; pokud ne, nejdřív spustí validace a teprve pak srovnává. Vlastní srovnání pak v obou případech zajistí jediné volání <code>porovnej_pam_varky(path_out_dir, path_control_dir)</code> na konci skriptu.</p>
 </section>
 <section id="párování-reportů" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="párování-reportů"><span class="header-section-number">5.3</span> Párování reportů</h2>
-<p>Kontrolní report se hledá podle <strong>shodného názvu bez koncovky <code>_YYMMDD</code></strong> (tzv. <em>stem</em>). Např. testovaný <code>p1_04_validace_260604.xlsx</code> se spáruje s <code>p1_04_validace_251201.xlsx</code> ve <code>path_control</code>. Při více kandidátech se bere <strong>nejnovější</strong> odpovídající soubor. Kontrolní složka tedy musí obsahovat reporty se stejným základem názvu (<code>p1_04_validace_*</code>, <code>p1c_&lt;oddil&gt;_validace_*</code> …), jen s jiným datem.</p>
+<p>Kontrolní report se hledá podle <strong>shodného názvu bez koncovky <code>_YYMMDD</code></strong> (tzv. <em>stem</em>). Např. testovaný <code>p1_04_validace_260604.xlsx</code> se spáruje s <code>p1_04_validace_251201.xlsx</code> ve <code>path_control</code>. Při více kandidátech se bere <strong>nejnovější</strong> odpovídající soubor. Kontrolní složka tedy musí obsahovat reporty se stejným základem názvu (<code>p1_04_validace_*</code>, <code>p1c_&lt;oddil&gt;_validace_*</code> …), jen s jiným datem.</p>
 </section>
 <section id="co-se-porovnává" class="level2" data-number="5.4">
 <h2 data-number="5.4" class="anchored" data-anchor-id="co-se-porovnává"><span class="header-section-number">5.4</span> Co se porovnává</h2>
 <p>Srovnání má tři části:</p>
 <ul>
-<li><strong><code>overview_compare</code></strong> – metriky z listu „Report overview” (počet let, počet řádků, počet záporných proměnných, existence duplicit, …). Spojí se podle názvu metriky a ponechají se řádky, kde se <code>value_control</code> ≠ <code>value_test</code>.</li>
-<li><strong><code>summary_compare</code></strong> – porovnání <strong>po proměnných</strong> (<code>polozka_index</code>). Listy „Summary” a „Strange behaviour” se z obou reportů spojí podle <code>polozka_index</code>, převedou do dlouhého formátu (<code>polozka_index</code> × <code>variable</code> × <code>hodnota</code>) a porovnají po jednotlivých hodnotách. Porovnávají se jen <strong>sloupce přítomné v obou</strong> reportech. Proměnné, které jsou jen v jedné várce, dostanou řádek s <code>variable = &quot;exist&quot;</code> a hodnotou <em>„jen v control” / „jen v test”</em>.</li>
-<li><strong><code>missing_vykaz</code></strong> – (jen v <code>porovnej_pam_varky()</code>) detekuje výkazy, které jsou jen v <code>path_test</code> (nové výkazy) nebo jen v <code>path_control</code> (ztracené výkazy). Vrací tibble se sloupci <code>vykaz</code> a <code>status</code> (<em>„jen v test”</em> / <em>„jen v control”</em>).</li>
+<li><strong><code>overview_compare</code></strong> – metriky z listu „Report overview” (počet let, počet řádků, počet záporných proměnných, existence duplicit, …). Spojí se podle názvu metriky a ponechají se řádky, kde se <code>value_control</code> ≠ <code>value_test</code>.</li>
+<li><strong><code>summary_compare</code></strong> – porovnání <strong>po proměnných</strong> (<code>polozka_index</code>). Listy „Summary” a „Strange behaviour” se z obou reportů spojí podle <code>polozka_index</code>, převedou do dlouhého formátu (<code>polozka_index</code> × <code>variable</code> × <code>hodnota</code>) a porovnají po jednotlivých hodnotách. Porovnávají se jen <strong>sloupce přítomné v obou</strong> reportech. Proměnné, které jsou jen v jedné várce, dostanou řádek s <code>variable = &quot;exist&quot;</code> a hodnotou <em>„jen v control” / „jen v test”</em>.</li>
+<li><strong><code>missing_vykaz</code></strong> – (jen v <code>porovnej_pam_varky()</code>) detekuje výkazy, které jsou jen v <code>path_test</code> (nové výkazy) nebo jen v <code>path_control</code> (ztracené výkazy). Vrací tibble se sloupci <code>vykaz</code> a <code>status</code> (<em>„jen v test”</em> / <em>„jen v control”</em>).</li>
 </ul>
 <table class="caption-top table">
 <thead>
@@ -3312,7 +3424,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <tbody>
 <tr class="odd">
 <td><code>polozka_index</code></td>
-<td>Kód proměnné (jen u <code>summary_compare</code>)</td>
+<td>Kód proměnné (jen u <code>summary_compare</code>)</td>
 </tr>
 <tr class="even">
 <td><code>variable</code></td>
@@ -3324,7 +3436,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </tr>
 <tr class="even">
 <td><code>value_test</code></td>
-<td>Hodnota z nové (testované) várky</td>
+<td>Hodnota z nové (testované) várky</td>
 </tr>
 </tbody>
 </table>
@@ -3336,7 +3448,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <p>Soubor má tyto listy:</p>
 <section id="list-overview" class="level3" data-number="5.5.1">
 <h3 data-number="5.5.1" class="anchored" data-anchor-id="list-overview"><span class="header-section-number">5.5.1</span> List „Overview”</h3>
-<p>Tabulka s neshodami v <strong>strukturálních metrikách</strong> (z „Report overview” listu obou reportů):</p>
+<p>Tabulka s neshodami v <strong>strukturálních metrikách</strong> (z „Report overview” listu obou reportů):</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 14%">
@@ -3367,7 +3479,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 </section>
 <section id="listy-summary-p1-04-summary-p1a-summary-p1c-volitelně" class="level3" data-number="5.5.2">
 <h3 data-number="5.5.2" class="anchored" data-anchor-id="listy-summary-p1-04-summary-p1a-summary-p1c-volitelně"><span class="header-section-number">5.5.2</span> Listy „Summary P1-04”, „Summary P1a”, „Summary P1c” (volitelně)</h3>
-<p>Tabulka s neshodami <strong>po proměnných</strong> (z listů „Summary” a „Strange behaviour”) – zvlášť pro každý typ výkazu. Listy se vytvoří jen pokud existují neshody v daném výkazu.</p>
+<p>Tabulka s neshodami <strong>po proměnných</strong> (z listů „Summary” a „Strange behaviour”) – zvlášť pro každý typ výkazu. Listy se vytvoří jen pokud existují neshody v daném výkazu.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 13%">
@@ -3401,7 +3513,7 @@ Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměn
 <li>Textové metriky: <code>&lt;stará&gt; → &lt;nová&gt;</code></li>
 <li>Beze změny: <code>NA</code></li>
 </ul>
-<p>Řádky obsahují <strong>jen proměnné, kde se alespoň jedna metrika liší</strong>. A analogicky sloupce obsahují pouze metriky, u nichž se alespoň jedna proměnná liší.</p>
+<p>Řádky obsahují <strong>jen proměnné, kde se alespoň jedna metrika liší</strong>. A analogicky sloupce obsahují pouze metriky, u nichž se alespoň jedna proměnná liší.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-example-compare-p1c" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -3423,17 +3535,17 @@ Obrázek 1: Ukázka listu Summary P1c
 <p>Ve <code>validace_PAM_funkce.R</code> jsou tři funkce:</p>
 <ul>
 <li><code>porovnej_pam_reporty(path_control_xlsx, path_test_xlsx)</code> – jádro srovnání <strong>jednoho páru</strong> reportů; vrací R list; volá ji <code>validace_pam()</code> v Kroku 8 (režim 1).</li>
-<li><code>porovnej_pam_varky(path_test, path_control)</code> – <strong>dávkový obal</strong> nad celými složkami: spáruje reporty podle stemu, slepí výsledky a vrací R list; automaticky volá <code>write_pam_compare_xlsx()</code> (režim 2).</li>
-<li><code>write_pam_compare_xlsx(compare, path_out)</code> – export R listu do <code>.xlsx</code> souboru se listy Overview a Summary.</li>
+<li><code>porovnej_pam_varky(path_test, path_control)</code> – <strong>dávkový obal</strong> nad celými složkami: spáruje reporty podle stemu, slepí výsledky a vrací R list; automaticky volá <code>write_pam_compare_xlsx()</code> (režim 2).</li>
+<li><code>write_pam_compare_xlsx(compare, path_out)</code> – export R listu do <code>.xlsx</code> souboru se listy Overview a Summary.</li>
 <li><code>format_summary_compare_wide(summary_compare)</code> – konvertuje long formát (<code>polozka_index</code> × <code>variable</code> × <code>value</code>) do wide formátu pro čitelnost v Excelu.</li>
 </ul>
-<p>Přístup je převzatý z DM validace (<code>validace_dat.R</code>, <code>compare_data = TRUE</code>) a přizpůsobený PaM reportům (klíč <code>polozka_index</code>, listy „Summary” + „Strange behaviour”, PaM metriky overview).</p>
+<p>Přístup je převzatý z DM validace (<code>validace_dat.R</code>, <code>compare_data = TRUE</code>) a přizpůsobený PaM reportům (klíč <code>polozka_index</code>, listy „Summary” + „Strange behaviour”, PaM metriky overview).</p>
 <hr>
 </section>
 </section>
 <section id="srovnání-s-validací-datového-modelu-školy-dm" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> Srovnání s validací datového modelu školy (DM)</h1>
-<p>PaM validace (<code>validace_PAM.R</code>) a validace datového modelu školy <a href="https://edudata.msmt.gov.cz/">EduData</a> (<code>validace_dat.R</code>) sdílejí stejný cíl – kontrolu kvality r-kových proměnných – ale liší se v přístupu i zaměření:</p>
+<h1 data-number="6"><span class="header-section-number">6</span> Srovnání s validací datového modelu školy (DM)</h1>
+<p>PaM validace (<code>validace_PAM.R</code>) a validace datového modelu školy <a href="https://edudata.msmt.gov.cz/">EduData</a> (<code>validace_dat.R</code>) sdílejí stejný cíl – kontrolu kvality r-kových proměnných – ale liší se v přístupu i zaměření:</p>
 <div data-tbl-colwidths="[25, 30, 45]">
 <table class="caption-top table">
 <colgroup>
@@ -3472,7 +3584,7 @@ Obrázek 1: Ukázka listu Summary P1c
 <tr class="odd">
 <td><strong>Outlier práh</strong></td>
 <td><span class="math inline">\(&gt; Q_3 + 1,5 \times IQR\)</span></td>
-<td><span class="math inline">\(&gt; Q_3 + 3 \times IQR\)</span> a u sub-ročních dat navíc <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span> (benevolentnější práh z důvodu menší variability dat v čase)</td>
+<td><span class="math inline">\(&gt; Q_3 + 3 \times IQR\)</span> a u sub-ročních dat navíc <span class="math inline">\(&lt; Q_1 - 3 \times IQR\)</span> (benevolentnější práh zdůvodu menší variability dat v čase)</td>
 </tr>
 <tr class="even">
 <td><strong>Porovnání dvou várek</strong></td>
@@ -3486,7 +3598,7 @@ Obrázek 1: Ukázka listu Summary P1c
 </tr>
 <tr class="even">
 <td><strong>Typy dat</strong></td>
-<td>statické i dynamické výkazy</td>
+<td>statické i dynamické výkazy</td>
 <td>pouze PaM výkazy</td>
 </tr>
 <tr class="odd">
@@ -3497,14 +3609,14 @@ Obrázek 1: Ukázka listu Summary P1c
 <tr class="even">
 <td><strong>Labely</strong></td>
 <td>nejnovější soubor ze složky labelů (automaticky)</td>
-<td>fixní <code>pamvykpol_labels.xlsx</code></td>
+<td>fixní <code>vykpol_new.xlsx</code></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Klíčový přínos PaM validace oproti DM: schopnost odhalit <strong>nekonzistentní měření v čase</strong> (chybějící měsíce v jinak pravidelně vykazované proměnné) a <strong>skoky mezi po sobě jdoucími měsíci</strong> díky statistikám z diferencí.</p>
+<p>Klíčový přínos PaM validace oproti DM: schopnost odhalit <strong>nekonzistentní měření v čase</strong> (chybějící měsíce v jinak pravidelně vykazované proměnné) a <strong>skoky mezi po sobě jdoucími měsíci</strong> díky statistikám z diferencí.</p>
 <hr>
-<p>Validace PaM slouží jako opakovaně spustitelný nástroj pro kontrolu dat z výkazů P1-04, P1a a P1c. Díky automatické detekci frekvence měření a statistikám z meziměsíčních diferencí zachytí nestandardní chování i v sub-ročních časových řadách. Výstupní <code>.xlsx</code> reporty slouží jako podklad pro datovou kontrolu a případnou opravu vstupních dat.</p>
+<p>Validace PaM slouží jako opakovaně spustitelný nástroj pro kontrolu dat z výkazů P1-04, P1a a P1c. Díky automatické detekci frekvence měření a statistikám z meziměsíčních diferencí zachytí nestandardní chování i v sub-ročních časových řadách. Výstupní <code>.xlsx</code> reporty slouží jako podklad pro datovou kontrolu a případnou opravu vstupních dat.</p>
 </section>
 
 </main>

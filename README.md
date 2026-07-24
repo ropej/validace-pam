@@ -17,16 +17,24 @@ Metodika obsahuje:
 
 ```
 validace-pam/
-├── README.md                           # Tento soubor
-├── validace PaM - metodika.qmd         # Zdrojový Quarto dokument (metodika)
-├── validace_PAM.R                      # Hlavní skript pro spuštění validace
-├── validace_PAM_funkce.R               # Knihovna funkcí pro validaci
+├── README.md                                        # Tento soubor
+├── validace PaM - metodika.qmd                      # Zdrojový Quarto dokument (metodika)
+├── validace_PAM.R                                   # Hlavní skript pro spuštění validace
+├── validace_PAM_funkce.R                            # Knihovna funkcí pro validaci
+├── docs/
+│   ├── index.html                                   # Vyrendrovaná metodika (GitHub Pages)
+│   ├── frekvence_manualni_maping.yml                # Ruční mapování frekvencí (szablona)
+│   ├── frekvence_manualni_maping_autogenerovana.yml # Automaticky vygenerované mapování
+│   └── example_compare_p1c.png                      # Obrázek z metodiky
 ├── Subanalýzy/
-│   └── kontrola_prazdnych_labelu.R    # Pomocný skript pro analýzy
-└── docs/
-    ├── index.html                      # Vyrendrovaná metodika (GitHub Pages)
-    └── example_compare_p1c.png         # Obrázek z metodiky
+│   └── kontrola_prazdnych_labelu.R                  # Pomocný skript pro analýzy
+└── Výkazy-validace/                                 # Výstupní složka (se reporty dle data)
 ```
+
+### Mapování frekvencí
+
+- **`frekvence_manualni_maping.yml`** – ruční přepisy automatické detekce (když je potřeba opravit či upřesnit)
+- **`frekvence_manualni_maping_autogenerovana.yml`** – návrh automaticky vygenerovaný z textových popisů v labelech; funkce `generate_auto_frequency_mapping()` detekuje měsíce měření (březen, červen, září, prosinec) a automaticky agreguje proměnné se stejnými parametry po oddílech (např. všechny r04xxx se stejnou frekvencí → agregace na r04)
 
 ## 🚀 Spuštění validace
 

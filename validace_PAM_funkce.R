@@ -2360,24 +2360,101 @@ generate_auto_frequency_mapping <- function(labels_clean, path_out_yaml = "docs/
 
       vykaz_section[[r_prefix_val]] <- list(
         frekvence = "roční",
-        ocekavane_mesice = row$detected_mesic,
-        poznamka = paste0("Stav k poslední den měsíce ", mesic_name, " – měří se jen v ", mesic_name)
+        ocekavane_mesice = as.character(row$detected_mesic),
+        poznamka = paste0("Stav k poslední den měsíce ", mesic_name, " - měří se jen v ", mesic_name)
       )
     }
 
     yaml_list[[vykaz_val]] <- vykaz_section
   }
 
-  # Uložit YAML
-  yaml::write_yaml(yaml_list, file = path_out_yaml)
+  # Agreguj proměnné se stejným prefixem a stejnými parametry
+  yaml_list_aggregated <- aggregate_prefix_mappings(yaml_list, labels_clean)
+
+  # Uložit YAML (s uvozovkami kolem stringů)
+  yaml::write_yaml(yaml_list_aggregated, file = path_out_yaml, as.character = TRUE)
   message(paste0("✓ Automatické mapování uloženo do: ", path_out_yaml))
   message(paste0("  Mapováno proměnných: ", nrow(auto_mapped)))
 
   return(list(
     auto_mapped = auto_mapped,
     n_mapped = nrow(auto_mapped),
-    yaml_list = yaml_list,
+    yaml_list = yaml_list_aggregated,
     yaml_saved = TRUE,
     yaml_path = path_out_yaml
   ))
+}
+
+# ==============================================================================
+# aggregate_prefix_mappings()
+# Agreguje mapované proměnné, které mají shodný prefix oddílu a identické parametry
+# Např. r04001, r04002, ... r04015 se stejnou frekvencí → agreguj na "r04"
+# ==============================================================================
+
+aggregate_prefix_mappings <- function(yaml_list, labels_clean) {
+
+  for (vykaz_name in names(yaml_list)) {
+    vykaz_mapping <- yaml_list[[vykaz_name]]
+
+    # Filtruj labels_clean na daný vykaz (suffix v polozka_index)
+    vykaz_suffix <- paste0(".", vykaz_name)
+    vykaz_vars <- labels_clean %>%
+      filter(str_ends(polozka_index, fixed(vykaz_suffix))) %>%
+      select(polozka_index)
+
+    if (nrow(vykaz_vars) == 0) next
+
+    # Detekuj pattern prefixu oddílu dle vykazu
+    prefix_pattern <- if (vykaz_name == "1c") {
+      "^r\\d{2}"  # P1c: r04, r06, r08, ...
+    } else if (vykaz_name %in% c("1a", "p1")) {
+      "^r\\d{1,2}s?"  # P1a/P1-04: r01, r1s, r010102, ...
+    } else {
+      next
+    }
+
+    # Extrahuj oddíl prefix pro každou proměnnou
+    vykaz_vars <- vykaz_vars %>%
+      mutate(oddil_prefix = str_extract(polozka_index, prefix_pattern))
+
+    # Extrahuj r_prefix (jak se do yaml_list uloží)
+    vykaz_vars <- vykaz_vars %>%
+      mutate(r_prefix = str_extract(polozka_index, "^r[0-9a-z]+"))
+
+    # Pro každý oddíl_prefix
+    for (prefix_val in unique(na.omit(vykaz_vars$oddil_prefix))) {
+
+      prefix_group <- vykaz_vars %>%
+        filter(oddil_prefix == prefix_val) %>%
+        pull(r_prefix)
+
+      # Zkontroluj, zda všechny jsou v yaml_list
+      all_in_yaml <- all(prefix_group %in% names(vykaz_mapping))
+      if (!all_in_yaml) next
+
+      # Vezmi parametry prvního (měly by být všechny stejné)
+      first_params <- vykaz_mapping[[prefix_group[1]]]
+
+      # Zkontroluj, zda všechny mají identické parametry
+      all_identical <- all(sapply(prefix_group, function(r_p) {
+        identical(vykaz_mapping[[r_p]], first_params)
+      }))
+
+      if (all_identical && length(prefix_group) > 0) {
+        # Agreguj: přidej prefix_val a smaž jednotlivé
+        vykaz_mapping[[prefix_val]] <- first_params
+
+        for (r_p in prefix_group) {
+          vykaz_mapping[[r_p]] <- NULL
+        }
+
+        n_vars <- length(prefix_group)
+        message(paste0("  Agregováno: ", prefix_val, " (bylo ", n_vars, " proměnných)"))
+      }
+    }
+
+    yaml_list[[vykaz_name]] <- vykaz_mapping
+  }
+
+  return(yaml_list)
 }
