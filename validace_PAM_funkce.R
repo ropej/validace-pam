@@ -164,12 +164,21 @@ prep_pam_labels <- function(path_labels, r_pattern = "^r\\d{1}") {
     mutate(across(everything(), as.character)) |>
     mutate(
       polozka = if_else(typ == "01",
-                        str_replace(polozka, "^r(\\d)(\\d{2})$", "r0\\10\\2"), polozka),
-      typ = recode(typ, "01" = "p1")
+                        str_replace(polozka, "^r(\\d)(\\d{2})$", "r0\\1\\2"), polozka),
+      typ = recode(typ, "01" = "p1"),
+      oddil_padded = if_else(
+        str_detect(oddil, "^\\d$"),
+        str_pad(oddil, 2, pad = "0"),
+        oddil
+      ),
+      polozka_index = if_else(
+        typ == "1c",
+        paste0("r", oddil_padded,
+               str_pad(str_sub(str_extract(polozka, "\\d+$"), -2), 2, pad = "0"), ".1c"),
+        paste0(polozka, ".", typ)
+      )
     ) |>
-    rename(label_result = "zkr",
-           polozka_index = "polozka") |>
-    mutate(polozka_index = paste0(polozka_index, ".", typ)) |>
+    rename(label_result = "zkr") |>
     mutate(label_result = clean_excel_text(label_result)) |>
     filter(!if_all(everything(), is.na)) |>
     distinct(polozka_index, .keep_all = TRUE) |>
@@ -762,11 +771,12 @@ summarise_pam_variables <- function(data, id_cols,
   if (!is.null(labels_clean)) {
     label_keys <- if (!is.null(oddil)) {
       code <- oddil_to_code(oddil)
-      # P1c: přeměň r1, r2 na r101, r202 apod.
-      paste0("r", code, "0", str_extract(summary_table$polozka_index, "\\d{2}$"))
+      # P1c: přeměň r1, r2 na r401, r402 apod.
+      paste0("r", code,
+             str_pad(str_sub(str_extract(summary_table$polozka_index, "\\d+$"), -2), 2, pad = "0"))
     } else if (r_pattern == "^r\\d{3}$") {
       # P1-04: přeměň r123 na r0123
-      str_replace(summary_table$polozka_index, "^r(\\d)(\\d{2})$", "r0\\10\\2")
+      str_replace(summary_table$polozka_index, "^r(\\d)(\\d{2})$", "r0\\1\\2")
     } else {
       # P1a: používej jak jsou (rid, r1, r2, ...)
       summary_table$polozka_index
@@ -2371,8 +2381,8 @@ generate_auto_frequency_mapping <- function(labels_clean, path_out_yaml = "docs/
   # Agreguj proměnné se stejným prefixem a stejnými parametry
   yaml_list_aggregated <- aggregate_prefix_mappings(yaml_list, labels_clean)
 
-  # Uložit YAML (s uvozovkami kolem stringů)
-  yaml::write_yaml(yaml_list_aggregated, file = path_out_yaml, as.character = TRUE)
+  # Uložit YAML
+  yaml::write_yaml(yaml_list_aggregated, file = path_out_yaml)
   message(paste0("✓ Automatické mapování uloženo do: ", path_out_yaml))
   message(paste0("  Mapováno proměnných: ", nrow(auto_mapped)))
 

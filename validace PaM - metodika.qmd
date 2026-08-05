@@ -182,7 +182,7 @@ Každý řádek odpovídá jedné r-proměnné. Sloupce a jejich význam:
 +==============================+==================================================================================================================================================================================================================================================================================================================================+
 | `polozka_index`              | Kód proměnné v datech (např. `r102`, `r010102`, `r01`, `r601`).                                                                                                                                                                                                                                                                  |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| `polozka_index_suffix`       | Unikátní kód každé proměnné včetně suffixu výkazu (např. `r102` z P1-04 se mapuje na `r01002.p1`, `r010102` z P1a na `r010102.1a`, `r01` z P1c-IV na `r04001.1c` atd.).                                                                                                                                                          |
+| `polozka_index_suffix`       | Unikátní kód každé proměnné včetně suffixu výkazu (např. `r102` z P1-04 se mapuje na `r0102.p1`, `r010102` z P1a na `r010102.1a`, `r01` z P1c-IV na `r0401.1c` atd.).                                                                                                                                                            |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | `typ_promenne`               | Datový typ (`numeric`, `character`, …).                                                                                                                                                                                                                                                                                          |
 +------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -366,15 +366,15 @@ Mapování labelů probíhá ve třech krocích:
 
     Rekonstrukce se liší podle typu výkazu:
 
-    -   **P1-04** – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a řádky a přidán suffix `.p1`.\
-        *např.* `r101` → `r01001.p1`
+    -   **P1-04** – kód proměnné je doplněn na čtyřmístné označení pomocí úvodních nul před oddílem a přidán suffix `.p1`.\
+        *např.* `r101` → `r0101.p1`
 
     -   **P1a** – původní kód proměnné je ponechán a pouze je doplněn suffix `.1a`.\
         *např.* `r010102` → `r010102.1a`
 
-    -   **P1c** – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (`04`, `4a`, `4b`, `4c`, `06`, `08`), před číslo řádku je případně doplněna úvodní nula a na závěr přidán suffix `.1c`.\
-        *např.* `r01` v oddíle IV → `r04001.1c`, `r01` v oddíle IVa → `r4a001.1c`.\
-        Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. `r601` → `r06001.1c`.
+    -   **P1c** – kód je vytvořen z označení oddílu a řádku výkazu. Prefix odpovídá oddílu (`04`, `4a`, `4b`, `4c`, `06`, `08`) a na závěr přidán suffix `.1c`.\
+        *např.* `r01` v oddíle IV → `r0401.1c`, `r01` v oddíle IVa → `r4a01.1c`.\
+        Výjimkou je oddíl VI, kde označení oddílu vstupuje přímo do kódu proměnné, např. `r601` → `r0601.1c`.
 
 3.  **Mapování labelů**
 
@@ -525,7 +525,7 @@ report_pam <- validace_pam(
   facility_id  = "ico",
   r_pattern    = "^r\\d{3}$",      # výchozí
   vykaz        = "p1",
-  max_rok      = 2024
+  max_rok      = 2025
 )
 ```
 
@@ -537,10 +537,10 @@ report_pam_1a <- validace_pam(
   labels_clean = labels_clean,
   path_out     = "Výkazy-validace/260604/p1a_validace_260604.xlsx",
   id_cols      = intersect(id_cols, names(pam_1a)),
-  facility_id  = "rid",            # !
-  r_pattern    = "^r\\d{1}",       # !
+  facility_id  = "rid",
+  r_pattern    = "^r\\d{1}",
   vykaz        = "1a",
-  max_rok      = 2024
+  max_rok      = 2025
 )
 ```
 
@@ -559,7 +559,7 @@ iwalk(pam_p1c_all, function(d, oddil) {
     r_pattern    = "^r\\d{1}",
     vykaz        = "1c",
     oddil        = oddil,
-    max_rok      = 2024
+    max_rok      = 2025
   )
 })
 ```
