@@ -40,7 +40,7 @@ path_out_dir <- file.path(
 if (!dir.exists(path_out_dir)) dir.create(path_out_dir, recursive = TRUE)
 
 # Kontrolní (starší) várka, vůči které se porovnává
-datum_control    <- "260703"   # YYMMDD – datum kontrolní sady
+datum_control    <- "260821"   # YYMMDD – datum kontrolní sady
 path_control_dir <- file.path(dirname(path_out_dir), datum_control)
 
 # Jsou reporty pro datum_test už vygenerované? Pokud ano, generování přeskočíme
@@ -231,7 +231,7 @@ report_pam_1b <- validace_pam(
   path_out     = path_out_pam_1b,
   id_cols      = intersect(id_cols, names(pam_1b)),
   facility_id  = "rid",
-  r_pattern    = "^r\\d{3}",
+  r_pattern    = "^r\\d{6}",
   max_rok      = 2025,
   vykaz        = "1b"
 )
