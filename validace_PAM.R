@@ -19,7 +19,7 @@ source("validace_PAM_funkce.R")
 # NASTAVENÍ CEST
 # ==============================================================================
 
-datum_test <- "260703"   # YYMMDD – datum testovací sady; 260204, 260421, 260604, 260612, 260703
+datum_test <- "260821"   # YYMMDD – datum testovací sady; 260204, 260421, 260604, 260612, 260703, 260821, 260826
 
 base_path <- "C:/Users/pejcalovar/OneDrive - MSMT/Analytický útvar - KA 4 - Vybudování datové základny - 7. Datový model školy"
 
@@ -40,7 +40,7 @@ path_out_dir <- file.path(
 if (!dir.exists(path_out_dir)) dir.create(path_out_dir, recursive = TRUE)
 
 # Kontrolní (starší) várka, vůči které se porovnává
-datum_control    <- "260612"   # YYMMDD – datum kontrolní sady
+datum_control    <- "260703"   # YYMMDD – datum kontrolní sady
 path_control_dir <- file.path(dirname(path_out_dir), datum_control)
 
 # Jsou reporty pro datum_test už vygenerované? Pokud ano, generování přeskočíme
@@ -81,6 +81,16 @@ pam_1a_all <- read_parquet(
 pam_1a <- pam_1a_all |>
   select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}")) |>
   rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{1}"))
+
+
+# --- P1b ---
+pam_1b_all <- read_parquet(
+  file.path(path_parquet, "P1b", "parquet", "vse.parquet")
+)
+
+pam_1b <- pam_1b_all |>
+  select(any_of(id_cols), any_of(facility_id), matches("^r\\d{6}")) |>
+  rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{6}"))
 
 
 # --- P1c ---
@@ -195,6 +205,26 @@ report_pam_1a <- validace_pam(
   r_pattern    = "^r\\d{1}",
   max_rok      = 2025,
   vykaz        = "1a"
+)
+
+# ==============================================================================
+# SPUŠTĚNÍ VALIDACE P1b
+# ==============================================================================
+
+path_out_pam_1b <- file.path(
+  path_out_dir,
+  paste0("p1b_validace_", datum_test, ".xlsx")
+)
+
+report_pam_1b <- validace_pam(
+  data         = pam_1b,
+  labels_clean = labels_clean,
+  path_out     = path_out_pam_1b,
+  id_cols      = intersect(id_cols, names(pam_1b)),
+  facility_id  = "rid",
+  r_pattern    = "^r\\d{3}",
+  max_rok      = 2025,
+  vykaz        = "1b"
 )
 
 # ==============================================================================

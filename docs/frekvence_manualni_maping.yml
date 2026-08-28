@@ -17,97 +17,97 @@
 #     r01:
 #       frekvence: "roční"
 #       ocekavane_mesice: "09"
-#       poznamka: "Pouze školy se zářím – měří se jen v září"
+#       poznamka: "Pouze školy se zářím - měří se jen v září"
 
 # P1-04 data
 p1:
   r02001:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
   r02002:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
   r02003:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
   r02004:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
   r02005:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
   r03072:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03073:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03074:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03075:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03076:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03077:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03078:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03079:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03080:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r03081:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r05018:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
   r05019:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Stav k poslední den měsíce září – měří se jen v září"
+    poznamka: "Stav k poslední den měsíce září - měří se jen v září"
 
 # P1a data
 1a:
   r01:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Školy se zářím – měří se jen v září"
+    poznamka: "Školy se zářím - měří se jen v září"
   r1s:
     frekvence: "roční"
     ocekavane_mesice: "09"
-    poznamka: "Školy se zářím – měří se jen v září"
+    poznamka: "Školy se zářím - měří se jen v září"
   r04:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k 31.12. – měří se jen v prosinci"
+    poznamka: "Stav k 31.12. - měří se jen v prosinci"
   r4s:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k 31.12. – měří se jen v prosinci"
+    poznamka: "Stav k 31.12. - měří se jen v prosinci"
   r02:
     frekvence: "čtvrtletní"
     ocekavane_mesice: "03, 06, 09, 12"
@@ -132,27 +132,19 @@ p1:
 
 # P1b
 1b:
-  r040102:
+  r04:
     frekvence: "roční"
     ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
-  r040202:
-    frekvence: "roční"
-    ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
-  r040302:
-    frekvence: "roční"
-    ocekavane_mesice: "12"
-    poznamka: "Stav k poslední den měsíce prosince – měří se jen v prosinci"
+    poznamka: "Stav k poslední den měsíce prosince - měří se jen v prosinci"
 
-# P1c – oddíl IV (Speciální vzdělávání)
-# (prozatím prázdné – doplnit dle potřeby)
+# P1c - oddíl IV (Speciální vzdělávání)
+# (prozatím prázdné - doplnit dle potřeby)
 
-# P1c – oddíl IVa
-# (prozatím prázdné – doplnit dle potřeby)
+# P1c - oddíl IVa
+# (prozatím prázdné - doplnit dle potřeby)
 
-# P1c – oddíl VI
-# (prozatím prázdné – doplnit dle potřeby)
+# P1c - oddíl VI
+# (prozatím prázdné - doplnit dle potřeby)
 
-# P1c – oddíl VIII
-# (prozatím prázdné – doplnit dle potřeby)
+# P1c - oddíl VIII
+# (prozatím prázdné - doplnit dle potřeby)
