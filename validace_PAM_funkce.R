@@ -2484,26 +2484,29 @@ find_pam_raw_file <- function(path_parquet, vykaz_name) {
   # Pro nový formát: "p1-04" → "1_04", "p1a" → "1a", "p1b" → "1b"
   vykaz_num <- sub("^p", "", vykaz_clean)
 
-  # Všechny možné vzory v pořadí priority
-  patterns <- c(
-    sprintf("^pam_%s_all_long_raw\\.parquet$", vykaz_clean),  # starý formát (do 2026-08-21)
-    sprintf("^out_pam_%s\\.parquet$", vykaz_num),             # nový formát (od 2026-08-26)
-    if (tolower(vykaz_name) == "p1b") "^vse\\.parquet$"       # fallback jen pro P1b
-  )
+  # Zkusit všechny vzory v pořadí priority
+  # 1) Starý formát
+  pat_old <- sprintf("^pam_%s_all_long_raw\\.parquet$", vykaz_clean)
+  candidates <- files[grepl(pat_old, basename(files))]
+  if (length(candidates) > 0) {
+    message("  ✓ Nalezeny data formátu: ", basename(candidates[1]), " (verze do 2026-08-21)")
+    return(candidates[1])
+  }
 
-  for (pat in patterns) {
-    if (is.na(pat)) next  # přeskoč NA pro P1a/P1-04
+  # 2) Nový formát
+  pat_new <- sprintf("^out_pam_%s\\.parquet$", vykaz_num)
+  candidates <- files[grepl(pat_new, basename(files))]
+  if (length(candidates) > 0) {
+    message("  ✓ Nalezeny data formátu: ", basename(candidates[1]), " (verze 2026-08-26+)")
+    return(candidates[1])
+  }
 
-    candidates <- files[grepl(pat, basename(files))]
+  # 3) Fallback - jen pro P1b
+  if (tolower(vykaz_name) == "p1b") {
+    pat_fallback <- "^vse\\.parquet$"
+    candidates <- files[grepl(pat_fallback, basename(files))]
     if (length(candidates) > 0) {
-      version <- if (grepl("_all_long_raw", pat)) {
-        "(verze do 2026-08-21)"
-      } else if (grepl("^out_pam_", pat)) {
-        "(verze 2026-08-26+)"
-      } else {
-        "(fallback - starší P1b)"
-      }
-      message("  ✓ Nalezeny data formátu: ", basename(candidates[1]), " ", version)
+      message("  ✓ Nalezeny data formátu: ", basename(candidates[1]), " (fallback - starší P1b)")
       return(candidates[1])
     }
   }
