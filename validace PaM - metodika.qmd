@@ -120,6 +120,8 @@ Spuštění celé validace:
 source("validace_PAM.R")
 ```
 
+Skript **automaticky detekuje formát vstupních dat** (nový formát `out_pam_*.parquet` od 2026-08-26 nebo starší `pam_*_all_long_raw.parquet`) a hlásí v konzoli, který zdroj se používá.
+
 Výsledné reporty se ukládají do složky `Výkazy-validace/<datum_test>/`.
 
 ------------------------------------------------------------------------

@@ -14,12 +14,42 @@ setwd("C:/Users/pejcalovar/OneDrive - MSMT/Analytický útvar - KA 4 - Vybudová
 
 source("validace_PAM_funkce.R")
 
+# Funkce na nalezení správného souboru PAM dat dle aktuálního formátu
+find_pam_raw_file <- function(path_parquet, vykaz_name) {
+  files <- list.files(path_parquet, pattern = "\\.parquet$", full.names = TRUE)
+
+  # Hledej nový formát (od 2026-08-26): out_pam_1_04.parquet, out_pam_1a.parquet, atd.
+  new_pattern <- sprintf("^out_pam_%s\\.parquet$", tolower(gsub("-", "_", vykaz_name)))
+  candidates_new <- files[grepl(new_pattern, basename(files))]
+
+  if (length(candidates_new) > 0) {
+    message("  ✓ Nalezeny data formátu: ", basename(candidates_new[1]), " (verze 2026-08-26+)")
+    return(candidates_new[1])
+  }
+
+  # Fallback na starý formát: pam_1_04_all_long_raw.parquet, pam_1a_all_long_raw.parquet
+  old_patterns <- c(
+    sprintf("^pam_%s_all_long_raw\\.parquet$", tolower(gsub("-", "_", vykaz_name))),
+    "^vse\\.parquet$"  # P1b v starých datech
+  )
+
+  for (pat in old_patterns) {
+    candidates_old <- files[grepl(pat, basename(files))]
+    if (length(candidates_old) > 0) {
+      message("  ✓ Nalezeny data formátu: ", basename(candidates_old[1]), " (verze do 2026-08-21)")
+      return(candidates_old[1])
+    }
+  }
+
+  stop("Žádná surová data pro ", vykaz_name, " nenalezena v: ", path_parquet)
+}
+
 
 # ==============================================================================
 # NASTAVENÍ CEST
 # ==============================================================================
 
-datum_test <- "260821"   # YYMMDD – datum testovací sady; 260204, 260421, 260604, 260612, 260703, 260821, 260826
+datum_test <- "260826"   # YYMMDD – datum testovací sady; 260204, 260421, 260604, 260612, 260703, 260821, 260826
 
 base_path <- "C:/Users/pejcalovar/OneDrive - MSMT/Analytický útvar - KA 4 - Vybudování datové základny - 7. Datový model školy"
 
@@ -65,18 +95,24 @@ facility_id <- c("red_izo", "rid", "ico")
 id_cols <- c("rok", "mes", "hosp_druh", "plat_rad", "druh_pam", "druh", "kategorie", "stupen", "zdroj")
 
 # --- P1-04 ---
-pam_1_04_all <- read_parquet(
-  file.path(path_parquet, "P1-04", "parquet", "pam_1_04_all_long_raw.parquet")
+message("Načítám P1-04...")
+p1_04_file <- find_pam_raw_file(
+  file.path(path_parquet, "P1-04", "parquet"),
+  "p1-04"
 )
+pam_1_04_all <- read_parquet(p1_04_file)
 
 pam_1_04 <- pam_1_04_all |>
   select(any_of(id_cols), any_of(facility_id), matches("^r\\d{3}")) |>
   rename_with(~ str_remove(., "\\.P.*$"), matches("^r\\d{3}"))
 
 # --- P1a ---
-pam_1a_all <- read_parquet(
-  file.path(path_parquet, "P1a", "parquet", "pam_1a_all_long_raw.parquet")
+message("Načítám P1a...")
+p1a_file <- find_pam_raw_file(
+  file.path(path_parquet, "P1a", "parquet"),
+  "p1a"
 )
+pam_1a_all <- read_parquet(p1a_file)
 
 pam_1a <- pam_1a_all |>
   select(any_of(id_cols), any_of(facility_id), matches("^r\\d{1}")) |>
@@ -84,9 +120,12 @@ pam_1a <- pam_1a_all |>
 
 
 # --- P1b ---
-pam_1b_all <- read_parquet(
-  file.path(path_parquet, "P1b", "parquet", "vse.parquet")
+message("Načítám P1b...")
+p1b_file <- find_pam_raw_file(
+  file.path(path_parquet, "P1b", "parquet"),
+  "p1b"
 )
+pam_1b_all <- read_parquet(p1b_file)
 
 pam_1b <- pam_1b_all |>
   select(any_of(id_cols), any_of(facility_id), matches("^r\\d{6}")) |>
