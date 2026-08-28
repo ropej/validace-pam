@@ -2481,11 +2481,13 @@ find_pam_raw_file <- function(path_parquet, vykaz_name) {
   files <- list.files(path_parquet, pattern = "\\.parquet$", full.names = TRUE)
 
   vykaz_clean <- tolower(gsub("-", "_", vykaz_name))
+  # Pro nový formát: "p1-04" → "1_04", "p1a" → "1a", "p1b" → "1b"
+  vykaz_num <- sub("^p", "", vykaz_clean)
 
   # Všechny možné vzory v pořadí priority
   patterns <- c(
     sprintf("^pam_%s_all_long_raw\\.parquet$", vykaz_clean),  # starý formát (do 2026-08-21)
-    sprintf("^out_pam_%s\\.parquet$", vykaz_clean),           # nový formát (od 2026-08-26)
+    sprintf("^out_pam_%s\\.parquet$", vykaz_num),             # nový formát (od 2026-08-26)
     if (tolower(vykaz_name) == "p1b") "^vse\\.parquet$"       # fallback jen pro P1b
   )
 
