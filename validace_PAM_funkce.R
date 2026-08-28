@@ -2480,30 +2480,29 @@ aggregate_prefix_mappings <- function(yaml_list, labels_clean) {
 find_pam_raw_file <- function(path_parquet, vykaz_name) {
   files <- list.files(path_parquet, pattern = "\\.parquet$", full.names = TRUE)
 
-  # 1) Hledej starý formát (do 2026-08-21): pam_1_04_all_long_raw.parquet, pam_1a_all_long_raw.parquet
-  old_pattern <- sprintf("^pam_%s_all_long_raw\\.parquet$", tolower(gsub("-", "_", vykaz_name)))
-  candidates_old <- files[grepl(old_pattern, basename(files))]
+  vykaz_clean <- tolower(gsub("-", "_", vykaz_name))
 
-  if (length(candidates_old) > 0) {
-    message("  ✓ Nalezeny data formátu: ", basename(candidates_old[1]), " (verze do 2026-08-21)")
-    return(candidates_old[1])
-  }
+  # Všechny možné vzory v pořadí priority
+  patterns <- c(
+    sprintf("^pam_%s_all_long_raw\\.parquet$", vykaz_clean),  # starý formát (do 2026-08-21)
+    sprintf("^out_pam_%s\\.parquet$", vykaz_clean),           # nový formát (od 2026-08-26)
+    if (tolower(vykaz_name) == "p1b") "^vse\\.parquet$"       # fallback jen pro P1b
+  )
 
-  # 2) Hledej nový formát (od 2026-08-26): out_pam_1_04.parquet, out_pam_1a.parquet, out_pam_1b.parquet
-  new_pattern <- sprintf("^out_pam_%s\\.parquet$", tolower(gsub("-", "_", vykaz_name)))
-  candidates_new <- files[grepl(new_pattern, basename(files))]
+  for (pat in patterns) {
+    if (is.na(pat)) next  # přeskoč NA pro P1a/P1-04
 
-  if (length(candidates_new) > 0) {
-    message("  ✓ Nalezeny data formátu: ", basename(candidates_new[1]), " (verze 2026-08-26+)")
-    return(candidates_new[1])
-  }
-
-  # 3) Fallback na vse.parquet (jen pro P1b v velmi starých datech)
-  if (tolower(vykaz_name) == "p1b") {
-    candidates_fallback <- files[grepl("^vse\\.parquet$", basename(files))]
-    if (length(candidates_fallback) > 0) {
-      message("  ✓ Nalezeny data formátu: ", basename(candidates_fallback[1]), " (fallback - starší P1b)")
-      return(candidates_fallback[1])
+    candidates <- files[grepl(pat, basename(files))]
+    if (length(candidates) > 0) {
+      version <- if (grepl("_all_long_raw", pat)) {
+        "(verze do 2026-08-21)"
+      } else if (grepl("^out_pam_", pat)) {
+        "(verze 2026-08-26+)"
+      } else {
+        "(fallback - starší P1b)"
+      }
+      message("  ✓ Nalezeny data formátu: ", basename(candidates[1]), " ", version)
+      return(candidates[1])
     }
   }
 
