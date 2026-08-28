@@ -2468,3 +2468,40 @@ aggregate_prefix_mappings <- function(yaml_list, labels_clean) {
 
   return(yaml_list)
 }
+
+
+# ------------------------------------------------------------------------------
+# Nalezení správného souboru PAM dat dle aktuálního formátu
+# Podporuje nový formát (od 2026-08-26): out_pam_*.parquet
+# Supportuje starý formát (do 2026-08-21): pam_*_all_long_raw.parquet, vse.parquet
+# Hlásí v konzoli, který zdroj se používá
+# ------------------------------------------------------------------------------
+
+find_pam_raw_file <- function(path_parquet, vykaz_name) {
+  files <- list.files(path_parquet, pattern = "\\.parquet$", full.names = TRUE)
+
+  # Hledej nový formát (od 2026-08-26): out_pam_1_04.parquet, out_pam_1a.parquet, atd.
+  new_pattern <- sprintf("^out_pam_%s\\.parquet$", tolower(gsub("-", "_", vykaz_name)))
+  candidates_new <- files[grepl(new_pattern, basename(files))]
+
+  if (length(candidates_new) > 0) {
+    message("  ✓ Nalezeny data formátu: ", basename(candidates_new[1]), " (verze 2026-08-26+)")
+    return(candidates_new[1])
+  }
+
+  # Fallback na starý formát: pam_1_04_all_long_raw.parquet, pam_1a_all_long_raw.parquet
+  old_patterns <- c(
+    sprintf("^pam_%s_all_long_raw\\.parquet$", tolower(gsub("-", "_", vykaz_name))),
+    "^vse\\.parquet$"  # P1b v starých datech
+  )
+
+  for (pat in old_patterns) {
+    candidates_old <- files[grepl(pat, basename(files))]
+    if (length(candidates_old) > 0) {
+      message("  ✓ Nalezeny data formátu: ", basename(candidates_old[1]), " (verze do 2026-08-21)")
+      return(candidates_old[1])
+    }
+  }
+
+  stop("Žádná surová data pro ", vykaz_name, " nenalezena v: ", path_parquet)
+}
